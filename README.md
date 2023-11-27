@@ -7,6 +7,8 @@ Wrapper around various package managers with unified CLI.
 - A single self-contained script. Just copy it somewhere on the `$PATH` and you're good to go.
 - POSIX compliant (will run literally everywhere). 
 
+![Demo usage](demo.gif)
+
 ## Usage
 
 Run `pm help` to get the usage.
