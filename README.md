@@ -37,7 +37,7 @@ Commands:
 
 ## FAQ
 
-### How to enforce a specific packager manager?
+### How to enforce a specific package manager?
 
 Use the `PM` environment variable
 
