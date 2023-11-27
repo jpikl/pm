@@ -2,8 +2,8 @@
 
 Wrapper around various package managers with unified CLI.
 
-- Supports: `pacman`, `paru`, `yay`, `apt`, `dnf`.
-- Interactive package selection using [fzf](https://github.com/junegunn/fzf) with package info preview.
+- Supports: [pacman][pacman], [paru][paru], [yay][yay], [apt][apt], [dnf][dnf].
+- Interactive package selection using [fzf][fzf] with package info preview.
 - A single self-contained script. Just copy it somewhere on the `$PATH` and you're good to go.
 - POSIX compliant (will run literally everywhere). 
 
@@ -65,3 +65,10 @@ Just create [an issue](https://github.com/jpikl/pm/issues) for the support and I
 ## License
 
 `pm` is licensed under the [MIT license](LICENSE).
+
+[apt]: https://salsa.debian.org/apt-team/apt
+[dnf]: https://github.com/rpm-software-management/dnf
+[fzf]: https://github.com/junegunn/fzf
+[pacman]: https://wiki.archlinux.org/title/Pacman
+[paru]: https://github.com/Morganamilo/paru
+[yay]: https://github.com/Jguer/yay
