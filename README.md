@@ -32,6 +32,7 @@ Commands:
   si                  Alias for 'search installed'
   sa                  Alias for 'search available'
   f, refresh          Refresh local package database
+  w, which            Print which package manager is being used
   h, help             Print this help
 ```
 

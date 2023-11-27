@@ -24,6 +24,7 @@ usage() {
     echo "  si                  Alias for 'search installed'"
     echo "  sa                  Alias for 'search available'"
     echo "  f, refresh          Refresh local package database"
+    echo "  w, which            Print which package manager is being used"
     echo "  h, help             Print this help"
 }
 
@@ -72,6 +73,7 @@ main() {
     si) search installed ;;
     sa) search available ;;
     f | refresh) refresh ;;
+    w | which) which ;;
     *) die_wrong_usage "invalid <command> argument '$COMMAND'" ;;
     esac
 }
@@ -117,6 +119,10 @@ search() {
 
 refresh() {
     "${PM}_refresh"
+}
+
+which() {
+    echo "$PM"
 }
 
 # =============================================================================
