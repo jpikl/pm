@@ -2,7 +2,8 @@
 
 set -eu
 
-PMS="yay pacman apt dnf"
+# Package managers are detected in this order
+PMS="paru yay pacman apt dnf"
 
 usage() {
     echo "Package manager wrapper (supports: $PMS)"
@@ -158,10 +159,10 @@ filter() {
 
 pacman_install() {
     for PKG in "$@"; do
-        if [ "$PKG" = yay ] || [ "$PKG" = yay-bin ]; then
-            # Custom install procedure for yay
-            pacman_install_yay "$PKG"
-            # Re-run the installation for the remaining packages (should use yay)
+        if [ "$PKG" = paru ] || [ "$PKG" = paru-bin ] || [ "$PKG" = yay ] || [ "$PKG" = yay-bin ]; then
+            # Custom install procedure for aur helpers
+            pacman_install_aur "$PKG"
+            # Re-run the installation for the remaining packages (should use the installed helper as PM)
             printf "%s\n" "$@" | grep -Fv "$PKG" | xargs -ro "$0" install
             return
         fi
@@ -169,7 +170,7 @@ pacman_install() {
     sudo pacman -S "$@"
 }
 
-pacman_install_yay() {
+pacman_install_aur() {
     sudo pacman -S --needed git base-devel
     TMP_DIR=$(mktemp -du)
     git clone "https://aur.archlinux.org/$1.git" "$TMP_DIR"
@@ -206,6 +207,43 @@ pacman_refresh() {
 }
 
 # =============================================================================
+# Paru
+# =============================================================================
+
+paru_install() {
+    paru -S "$@"
+}
+
+paru_upgrade() {
+    paru -Su
+}
+
+paru_remove() {
+    paru -Rsc "$@"
+}
+
+paru_info() {
+    paru -Si --color="$COLOR" "$1"
+}
+
+paru_list_installed() {
+    paru -Q --color="$COLOR"
+}
+
+paru_list_available() {
+    # Unlike yay, this is fast enough and properly sorted
+    paru -Sl --color"=$COLOR"
+}
+
+paru_list_available_column() {
+    echo 2
+}
+
+paru_refresh() {
+    paru -Sy
+}
+
+# =============================================================================
 # Yay
 # =============================================================================
 
@@ -232,7 +270,7 @@ yay_list_installed() {
 yay_list_available() {
     # Use yay to print only the AUR packages because
     # 1. We want non-AUR packages first in the list.
-    # 2. Its much faster to get results using pacman.
+    # 2. It's much faster to get results using pacman.
     pacman_list_available
     yay -Sla --color"=$COLOR"
 }

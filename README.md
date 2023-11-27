@@ -2,7 +2,7 @@
 
 Wrapper around various package managers with unified CLI.
 
-- Supports: `pacman`, `yay`, `apt`, `dnf`.
+- Supports: `pacman`, `paru`, `yay`, `apt`, `dnf`.
 - Interactive package selection using [fzf](https://github.com/junegunn/fzf) with package info preview.
 - A single self-contained script. Just copy it somewhere on the `$PATH` and you're good to go.
 - POSIX compliant (will run literally everywhere). 
@@ -14,7 +14,7 @@ Wrapper around various package managers with unified CLI.
 Run `pm help` to get the usage.
 
 ```
-Package manager wrapper (supports: yay pacman apt dnf)
+Package manager wrapper (supports: paru yay pacman apt dnf)
 
 Usage: pm <command>
 
