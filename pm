@@ -294,15 +294,18 @@ dnf_remove() {
 }
 
 dnf_info() {
-    dnf info --color="$COLOR" "$1"
+    # Skip the first line which includes headers
+    dnf info -q --color="$COLOR" "$1" | tail -n+2
 }
 
 dnf_list_installed() {
-    dnf list --installed --color="$COLOR"
+    # Skip the first line which includes headers
+    dnf list -q --installed --color="$COLOR" | tail -n+2
 }
 
 dnf_list_available() {
-    dnf list --color="$COLOR"
+    # Skip the first line which includes headers
+    dnf list -q --color="$COLOR" | tail -n+2
 }
 
 dnf_refresh() {
