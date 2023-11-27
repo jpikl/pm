@@ -262,15 +262,18 @@ apt_remove() {
 }
 
 apt_info() {
-    apt show "$1"
+    # Regular `apt show` prints warning about unstable CLI
+    apt-cache show "$1"
 }
 
 apt_list_installed() {
-    apt list --installed | tr '/' ' '
+    # Faster than `apt list --installed` and without the extra output
+    dpkg -l | grep '^ii' | awk '{print $2 "\t" $3}'
 }
 
 apt_list_available() {
-    apt list | tr '/' ' '
+    # Faster than `apt list` and without the extra output
+    apt-cache pkgnames | LC_ALL=C sort
 }
 
 apt_refresh() {
