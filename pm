@@ -173,7 +173,7 @@ pacman_install() {
             return
         fi
     done
-    sudo pacman -S "$@"
+    sudo pacman -S --needed "$@"
 }
 
 pacman_install_aur() {
@@ -217,7 +217,7 @@ pacman_refresh() {
 # =============================================================================
 
 paru_install() {
-    paru -S "$@"
+    paru -S --needed "$@"
 }
 
 paru_upgrade() {
@@ -254,7 +254,7 @@ paru_refresh() {
 # =============================================================================
 
 yay_install() {
-    yay -S "$@"
+    yay -S --needed "$@"
 }
 
 yay_upgrade() {
