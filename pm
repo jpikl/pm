@@ -38,11 +38,11 @@ main() {
         exit
     fi
 
-    if [ ! "${COLOR-}" ]; then
+    if [ ! "${PM_COLOR-}" ]; then
         if [ -t 1 ]; then
-            COLOR="always"
+            PM_COLOR="always"
         else
-            COLOR="never"
+            PM_COLOR="never"
         fi
     fi
 
@@ -84,7 +84,7 @@ main() {
 
 install() {
     if [ $# -eq 0 ]; then
-        search available | PM=$PM COLOR=$COLOR xargs -ro "$0" install
+        search available | PM=$PM PM_COLOR=$PM_COLOR xargs -ro "$0" install
     else
         "${PM}_install" "$@"
     fi
@@ -97,7 +97,7 @@ upgrade() {
 
 remove() {
     if [ $# -eq 0 ]; then
-        search installed | PM=$PM COLOR=$COLOR xargs -ro "$0" remove
+        search installed | PM=$PM PM_COLOR=$PM_COLOR xargs -ro "$0" remove
     else
         "${PM}_remove" "$@"
     fi
@@ -153,7 +153,7 @@ check_source() {
 filter() {
     if is_command fzf; then
         COLUMN=$("${PM}_list_${1}_column" 2>/dev/null || echo 1)
-        fzf --multi --no-sort --ansi --layout=reverse --exact --cycle --preview="PM=$PM COLOR=$COLOR $0 info {$COLUMN}" | cut -d" " -f"$COLUMN"
+        fzf --multi --no-sort --ansi --layout=reverse --exact --cycle --preview="PM=$PM PM_COLOR=$PM_COLOR $0 info {$COLUMN}" | cut -d" " -f"$COLUMN"
     else
         die "fzf is not available, run '${0##*/} install fzf' first"
     fi
@@ -193,15 +193,15 @@ pacman_upgrade() {
 }
 
 pacman_info() {
-    pacman -Si --color="$COLOR" "$1"
+    pacman -Si --color="$PM_COLOR" "$1"
 }
 
 pacman_list_installed() {
-    pacman -Q --color="$COLOR"
+    pacman -Q --color="$PM_COLOR"
 }
 
 pacman_list_available() {
-    pacman -Sl --color="$COLOR"
+    pacman -Sl --color="$PM_COLOR"
 }
 
 pacman_list_available_column() {
@@ -229,16 +229,16 @@ paru_remove() {
 }
 
 paru_info() {
-    paru -Si --color="$COLOR" "$1"
+    paru -Si --color="$PM_COLOR" "$1"
 }
 
 paru_list_installed() {
-    paru -Q --color="$COLOR"
+    paru -Q --color="$PM_COLOR"
 }
 
 paru_list_available() {
     # Unlike yay, this is fast enough and properly sorted
-    paru -Sl --color"=$COLOR"
+    paru -Sl --color"=$PM_COLOR"
 }
 
 paru_list_available_column() {
@@ -266,11 +266,11 @@ yay_remove() {
 }
 
 yay_info() {
-    yay -Si --color="$COLOR" "$1"
+    yay -Si --color="$PM_COLOR" "$1"
 }
 
 yay_list_installed() {
-    yay -Q --color="$COLOR"
+    yay -Q --color="$PM_COLOR"
 }
 
 yay_list_available() {
@@ -278,7 +278,7 @@ yay_list_available() {
     # 1. We want non-AUR packages first in the list.
     # 2. It's much faster to get results using pacman.
     pacman_list_available
-    yay -Sla --color"=$COLOR"
+    yay -Sla --color"=$PM_COLOR"
 }
 
 yay_list_available_column() {
@@ -342,17 +342,17 @@ dnf_remove() {
 
 dnf_info() {
     # Skip the first line which includes headers
-    dnf info -q --color="$COLOR" "$1" | tail -n+2
+    dnf info -q --color="$PM_COLOR" "$1" | tail -n+2
 }
 
 dnf_list_installed() {
     # Skip the first line which includes headers
-    dnf list -q --installed --color="$COLOR" | tail -n+2
+    dnf list -q --installed --color="$PM_COLOR" | tail -n+2
 }
 
 dnf_list_available() {
     # Skip the first line which includes headers
-    dnf list -q --color="$COLOR" | tail -n+2
+    dnf list -q --color="$PM_COLOR" | tail -n+2
 }
 
 dnf_refresh() {
