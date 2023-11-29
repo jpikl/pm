@@ -24,7 +24,7 @@ Commands:
   r,  remove           Interactively select packages to remove.
   r,  remove <pkg>...  Remove one or more packages.
   u,  upgrade          Upgrade all installed packages.
-  f,  refresh          Refresh local package database
+  f,  refresh          Refresh local package database.
   n,  info <pkg>       Print package information.
   la, list all         List all packages.
   li, list installed   List installed packages.
@@ -33,6 +33,32 @@ Commands:
   w,  which            Print which package manager is being used.
   h,  help             Print this help.
 ```
+
+## Features
+
+### STDIN filter
+
+Interactive commands can read additional filters from standard input.
+
+- Each line is interepreted as a whole package name.
+- Hash sign `#` indicates the start of a comment (which is ignored).
+
+```sh
+echo "bat" >> favorite_pkgs.txt
+echo "fzf" >> favorite_pkgs.txt
+echo "ripgrep" >> favorite_pkgs.txt
+
+# Interactively select favorite packages to install
+pm install < favorite_pkgs.txt
+```
+
+### AUR helpers
+
+On Arch Linux, `pm` allows easy installation of selected AUR helpers.
+
+Just run `pm install <aur-helper>` where `<aur-helper>` is one of `paru`, `yay` or their binary variant (`paru-bin`, `yay-bin`).
+
+These AUR helpers will be then used as the prefered package manager over `pacman`.
 
 ## Configuration
 

@@ -24,6 +24,9 @@ usage() {
     echo "  si  search installed Interactively search between installed packages."
     echo "  w,  which            Print which package manager is being used."
     echo "  h,  help             Print this help."
+    echo
+    echo "Interactive commands can read additional filters from standard input."
+    echo "Each line is interepreted as a whole package name."
 }
 
 main() {
@@ -44,19 +47,19 @@ main() {
         fi
     fi
 
-    # Output styling
+    # Output formatting
     if [ "$PM_COLOR" = always ]; then
-        ST_NAME='"\033[1m"'
-        ST_GROUP='" \033[1;35m"'
-        ST_VERSION='" \033[1;32m"'
-        ST_STATUS='" \033[1;36m"'
-        ST_RESET='"\033[0m"'
+        FMT_NAME='"\033[1m"'
+        FMT_GROUP='" \033[1;35m"'
+        FMT_VERSION='" \033[1;32m"'
+        FMT_STATUS='" \033[1;36m"'
+        FMT_RESET='"\033[0m"'
     else
-        ST_NAME='""'
-        ST_GROUP='" "'
-        ST_VERSION='" "'
-        ST_STATUS='" "'
-        ST_RESET='""'
+        FMT_NAME='""'
+        FMT_GROUP='" "'
+        FMT_VERSION='" "'
+        FMT_STATUS='" "'
+        FMT_RESET='""'
     fi
 
     if [ ! "${PM-}" ]; then
@@ -99,7 +102,7 @@ install() {
     if [ $# -eq 0 ]; then
         search all | PM=$PM PM_COLOR=$PM_COLOR xargs -ro "$0" install
     else
-        "${PM}_install" "$@"
+        pm_install "$@"
     fi
 }
 
@@ -107,31 +110,38 @@ remove() {
     if [ $# -eq 0 ]; then
         search installed | PM=$PM PM_COLOR=$PM_COLOR xargs -ro "$0" remove
     else
-        "${PM}_remove" "$@"
+        pm_remove "$@"
     fi
 }
 
 upgrade() {
-    "${PM}_refresh"
-    "${PM}_upgrade"
+    pm_refresh
+    pm_upgrade
 }
 
 refresh() {
-    "${PM}_refresh"
+    pm_refresh
 }
 
 info() {
-    "${PM}_info" "$@"
+    pm_info "$1"
 }
 
 list() {
     check_source "$@"
-    "${PM}_list_$1"
+    pm_list "$1" | pm_format "$1"
 }
 
 search() {
     check_source "$@"
-    list "$1" | filter "$1"
+
+    if [ -t 0 ]; then
+        pm_list "$1" | pm_format "$1" | filter "$1"
+    else
+        FILTER_FILE=$(make_temp)
+        compile_stdin_filter >"$FILTER_FILE"
+        pm_list "$1" | grep -Ef "$FILTER_FILE" | pm_format "$1" | filter "$1"
+    fi
 }
 
 which() {
@@ -155,6 +165,13 @@ is_command() {
     [ -x "$(command -v "$1")" ]
 }
 
+make_temp() {
+    TMP=$(mktemp "$@")
+    # shellcheck disable=SC2064
+    trap "rm -rf -- '$TMP'" EXIT
+    echo "$TMP"
+}
+
 check_source() {
     if [ $# -eq 0 ]; then
         die_wrong_usage "expected <source> argument"
@@ -163,12 +180,62 @@ check_source() {
     fi
 }
 
+compile_stdin_filter() {
+    # 1. Remove comments '#...'
+    # 2. Trim lines
+    # 3. Remove invalid names
+    # 4. Insert matching context ("start of line" ... "end of line" or "whitespace")
+    sed -E 's/#.*//;s/^\s+//;s/\s+$//' |
+        { grep -E '[a-zA-Z0-9_-]+' || die "empty stdin filter"; } |
+        awk '{ print "^" $1 "($|\\s)" }'
+}
+
 filter() {
     if is_command fzf; then
-        fzf --multi --no-sort --ansi --layout=reverse --exact --cycle --preview="PM=$PM PM_COLOR=$PM_COLOR $0 info {1}" | cut -d" " -f1
+        fzf --exit-0 \
+            --multi \
+            --no-sort \
+            --ansi \
+            --layout=reverse \
+            --exact \
+            --cycle \
+            --preview="PM=$PM PM_COLOR=$PM_COLOR $0 info {1}" |
+            cut -d" " -f1
     else
         die "fzf is not available, run '${0##*/} install fzf' first"
     fi
+}
+
+# =============================================================================
+# Dispatch
+# =============================================================================
+
+pm_install() {
+    "${PM}_install" "$@"
+}
+
+pm_remove() {
+    "${PM}_remove" "$@"
+}
+
+pm_upgrade() {
+    "${PM}_upgrade"
+}
+
+pm_refresh() {
+    "${PM}_refresh"
+}
+
+pm_info() {
+    "${PM}_info" "$1"
+}
+
+pm_list() {
+    "${PM}_list_$1"
+}
+
+pm_format() {
+    "${PM}_format_$1"
 }
 
 # =============================================================================
@@ -190,9 +257,9 @@ pacman_install() {
 
 pacman_install_aur() {
     sudo pacman -S --needed git base-devel
-    TMP_DIR=$(mktemp -du)
-    git clone "https://aur.archlinux.org/$1.git" "$TMP_DIR"
-    cd "$TMP_DIR"
+    AUR_DIR=$(make_temp -d)
+    git clone "https://aur.archlinux.org/$1.git" "$AUR_DIR"
+    cd "$AUR_DIR"
     makepkg -si
 }
 
@@ -213,19 +280,19 @@ pacman_info() {
 }
 
 pacman_list_all() {
-    pacman -Sl | pacman_format_all
+    pacman -Sl | awk '{ print $2 " " $1 " " $3 " " $4 }'
 }
 
 pacman_list_installed() {
-    pacman -Q | pacman_format_installed
+    pacman -Q
 }
 
 pacman_format_all() {
-    awk "{ print $ST_NAME \$2 $ST_GROUP \$1 $ST_VERSION \$3 $ST_STATUS \$4 $ST_RESET }"
+    awk "{ print $FMT_NAME \$1 $FMT_GROUP \$2 $FMT_VERSION \$3 $FMT_STATUS \$4 $FMT_RESET }"
 }
 
 pacman_format_installed() {
-    awk "{ print $ST_NAME \$1 $ST_VERSION \$2 $ST_RESET }"
+    awk "{ print $FMT_NAME \$1 $FMT_VERSION \$2 $FMT_RESET }"
 }
 
 # =============================================================================
@@ -253,11 +320,19 @@ paru_info() {
 }
 
 paru_list_all() {
-    paru -Sl | pacman_format_all
+    paru -Sl | awk '{ print $2 " " $1 " " $3 " " $4 }'
 }
 
 paru_list_installed() {
-    paru -Q | pacman_format_installed
+    paru -Q
+}
+
+paru_format_all() {
+    awk "{ print $FMT_NAME \$1 $FMT_GROUP \$2 $FMT_VERSION \$3 $FMT_STATUS \$4 $FMT_RESET }"
+}
+
+paru_format_installed() {
+    awk "{ print $FMT_NAME \$1 $FMT_VERSION \$2 $FMT_RESET }"
 }
 
 # =============================================================================
@@ -287,11 +362,19 @@ yay_info() {
 yay_list_all() {
     # We want non-AUR results first and pacman is also much faster than yay here.
     pacman_list_all
-    yay -Sla | pacman_format_all
+    yay -Sla | awk '{ print $2 " " $1 " " $3 " " $4 }'
 }
 
 yay_list_installed() {
-    yay -Q | pacman_format_installed
+    yay -Q
+}
+
+yay_format_all() {
+    awk "{ print $FMT_NAME \$1 $FMT_GROUP \$2 $FMT_VERSION \$3 $FMT_STATUS \$4 $FMT_RESET }"
+}
+
+yay_format_installed() {
+    awk "{ print $FMT_NAME \$1 $FMT_VERSION \$2 $FMT_RESET }"
 }
 
 # =============================================================================
@@ -320,17 +403,21 @@ apt_info() {
 }
 
 apt_list_all() {
-    TMP=$(mktemp)
-    dpkg-query --show -f '${package} [installed]\n' >"$TMP"
-    apt-cache pkgnames |
-        LC_ALL=C sort |
-        join -j1 -a1 - "$TMP" |
-        awk "{ print $ST_NAME \$1 $ST_STATUS \$2 $ST_RESET }"
-    rm "$TMP"
+    INSTALLED_PKGS_FILE=$(make_temp)
+    dpkg-query --show -f '${package} [installed]\n' >"$INSTALLED_PKGS_FILE"
+    apt-cache pkgnames | LC_ALL=C sort | join -j1 -a1 - "$INSTALLED_PKGS_FILE"
 }
 
 apt_list_installed() {
-    dpkg-query --show | awk "{ print $ST_NAME \$1 $ST_VERSION \$2 $ST_RESET }"
+    dpkg-query --show
+}
+
+apk_format_all() {
+    awk "{ print $FMT_NAME \$1 $FMT_STATUS \$2 $FMT_RESET }"
+}
+
+apk_format_installed() {
+    awk "{ print $FMT_NAME \$1 $FMT_VERSION \$2 $FMT_RESET }"
 }
 
 # =============================================================================
@@ -359,16 +446,22 @@ dnf_info() {
 }
 
 dnf_list_all() {
-    TMP=$(mktemp)
-    dnf repoquery -q --installed --qf '%{name} [installed]' >"$TMP"
-    dnf repoquery -q --qf='%{name} %{repoid} %{evr}' |
-        join -j1 -a1 - "$TMP" |
-        awk "{ print $ST_NAME \$1 $ST_GROUP \$2 $ST_VERSION \$3 $ST_STATUS \$4 $ST_RESET }"
-    rm "$TMP"
+    INSTALLED_PKGS_FILE=$(make_temp)
+    dnf repoquery -q --installed --qf '%{name} [installed]' >"$INSTALLED_PKGS_FILE"
+    dnf repoquery -q --qf='%{name} %{repoid} %{evr}' | join -j1 -a1 - "$INSTALLED_PKGS_FILE"
+
 }
 
 dnf_list_installed() {
-    dnf repoquery -q --installed --qf '%{name} %{evr}' | awk "{ print $ST_NAME \$1 $ST_VERSION \$2 $ST_RESET }"
+    dnf repoquery -q --installed --qf '%{name} %{evr}'
+}
+
+dnf_format_all() {
+    awk "{ print $FMT_NAME \$1 $FMT_GROUP \$2 $FMT_VERSION \$3 $FMT_STATUS \$4 $FMT_RESET }"
+}
+
+dnf_format_installed() {
+    awk "{ print $FMT_NAME \$1 $FMT_VERSION \$2 $FMT_RESET }"
 }
 
 # =============================================================================
