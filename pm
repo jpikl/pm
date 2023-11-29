@@ -46,6 +46,21 @@ main() {
         fi
     fi
 
+    # AWK styling
+    if [ "$PM_COLOR" = always ]; then
+        AS_NAME='"\033[1m"'
+        AS_GROUP='" \033[1;35m"'
+        AS_VERSION='" \033[1;32m"'
+        AS_STATUS='" \033[1;36m"'
+        AS_RESET='"\033[0m"'
+    else
+        AS_NAME='""'
+        AS_GROUP='" "'
+        AS_VERSION='" "'
+        AS_STATUS='" "'
+        AS_RESET='""'
+    fi
+
     if [ ! "${PM-}" ]; then
         for NAME in $PMS; do
             if is_command "$NAME"; then
@@ -152,8 +167,7 @@ check_source() {
 
 filter() {
     if is_command fzf; then
-        COLUMN=$("${PM}_list_${1}_column" 2>/dev/null || echo 1)
-        fzf --multi --no-sort --ansi --layout=reverse --exact --cycle --preview="PM=$PM PM_COLOR=$PM_COLOR $0 info {$COLUMN}" | cut -d" " -f"$COLUMN"
+        fzf --multi --no-sort --ansi --layout=reverse --exact --cycle --preview="PM=$PM PM_COLOR=$PM_COLOR $0 info {1}" | cut -d" " -f1
     else
         die "fzf is not available, run '${0##*/} install fzf' first"
     fi
@@ -197,15 +211,19 @@ pacman_info() {
 }
 
 pacman_list_installed() {
-    pacman -Q --color="$PM_COLOR"
+    pacman -Q | pacman_format_installed
 }
 
 pacman_list_available() {
-    pacman -Sl --color="$PM_COLOR"
+    pacman -Sl | pacman_format_available
 }
 
-pacman_list_available_column() {
-    echo 2
+pacman_format_installed() {
+    awk "{ print $AS_NAME \$1 $AS_VERSION \$2 $AS_RESET }"
+}
+
+pacman_format_available() {
+    awk "{ print $AS_NAME \$2 $AS_GROUP \$1 $AS_VERSION \$3 $AS_STATUS \$4 $AS_RESET }"
 }
 
 pacman_refresh() {
@@ -233,16 +251,12 @@ paru_info() {
 }
 
 paru_list_installed() {
-    paru -Q --color="$PM_COLOR"
+    paru -Q | pacman_format_installed
 }
 
 paru_list_available() {
     # Unlike yay, this is fast enough and properly sorted
-    paru -Sl --color"=$PM_COLOR"
-}
-
-paru_list_available_column() {
-    echo 2
+    paru -Sl | pacman_format_available
 }
 
 paru_refresh() {
@@ -270,19 +284,12 @@ yay_info() {
 }
 
 yay_list_installed() {
-    yay -Q --color="$PM_COLOR"
+    yay -Q | pacman_format_installed
 }
 
 yay_list_available() {
-    # Use yay to print only the AUR packages because
-    # 1. We want non-AUR packages first in the list.
-    # 2. It's much faster to get results using pacman.
     pacman_list_available
-    yay -Sla --color"=$PM_COLOR"
-}
-
-yay_list_available_column() {
-    echo 2
+    yay -Sla | pacman_format_available
 }
 
 yay_refresh() {
@@ -306,18 +313,22 @@ apt_remove() {
 }
 
 apt_info() {
-    # Regular `apt show` prints warning about unstable CLI
+    # Using `apt show` is not recommended due to unstable CLI
     apt-cache show "$1"
 }
 
 apt_list_installed() {
-    # Faster than `apt list --installed` and without the extra output
-    dpkg -l | grep '^ii' | awk '{print $2 "\t" $3}'
+    dpkg-query --show | awk "{ print $AS_NAME \$1 $AS_VERSION \$2 $AS_RESET }"
 }
 
 apt_list_available() {
-    # Faster than `apt list` and without the extra output
-    apt-cache pkgnames | LC_ALL=C sort
+    TMP=$(mktemp)
+    dpkg-query --show -f '${package} [installed]\n' >"$TMP"
+    apt-cache pkgnames |
+        LC_ALL=C sort |
+        join -j1 -a1 - "$TMP" |
+        awk "{ print $AS_NAME \$1 $AS_STATUS \$2 $AS_RESET }"
+    rm "$TMP"
 }
 
 apt_refresh() {
@@ -346,13 +357,16 @@ dnf_info() {
 }
 
 dnf_list_installed() {
-    # Skip the first line which includes headers
-    dnf list -q --installed --color="$PM_COLOR" | tail -n+2
+    dnf repoquery -q --installed --qf '%{name} %{evr}' | awk "{ print $AS_NAME \$1 $AS_VERSION \$2 $AS_RESET }"
 }
 
 dnf_list_available() {
-    # Skip the first line which includes headers
-    dnf list -q --color="$PM_COLOR" | tail -n+2
+    TMP=$(mktemp)
+    dnf repoquery -q --installed --qf '%{name} [installed]' >"$TMP"
+    dnf repoquery -q --qf='%{name} %{repoid} %{evr}' |
+        join -j1 -a1 - "$TMP" |
+        awk "{ print $AS_NAME \$1 $AS_GROUP \$2 $AS_VERSION \$3 $AS_STATUS \$4 $AS_RESET }"
+    rm "$TMP"
 }
 
 dnf_refresh() {
