@@ -19,21 +19,19 @@ Package manager wrapper (supports: paru yay pacman apt dnf)
 Usage: pm <command>
 
 Commands:
-  i, install          Interactively select packages to install
-  i, install <pkg>... Install one or more packages
-  u, upgrade          Upgrade all installed packages
-  r, remove           Interactively select packages to remove
-  r, remove <pkg>...  Remove one or more packages
-  n, info <pkg>       Print package information
-  l, list <source>    List packages (source: installed, available)
-  li                  Alias for 'list installed'
-  la                  Alias for 'list available'
-  s, search <source>  Interactively search packages (source: installed, available)
-  si                  Alias for 'search installed'
-  sa                  Alias for 'search available'
-  f, refresh          Refresh local package database
-  w, which            Print which package manager is being used
-  h, help             Print this help
+  i,  install          Interactively select packages to install
+  i,  install <pkg>... Install one or more packages
+  r,  remove           Interactively select packages to remove
+  r,  remove <pkg>...  Remove one or more packages
+  u,  upgrade          Upgrade all installed packages
+  f,  refresh          Refresh local package database
+  n,  info <pkg>       Print package information
+  la, list all         List all packages
+  li, list installed   List installed packages
+  sa  search all       Interactively search between all packages
+  si  search installed Interactively search between installed packages
+  w,  which            Print which package manager is being used
+  h,  help             Print this help
 ```
 
 ## FAQ
