@@ -11,21 +11,19 @@ usage() {
     echo "Usage: ${0##*/} <command>"
     echo
     echo "Commands:"
-    echo "  i, install          Interactively select packages to install"
-    echo "  i, install <pkg>... Install one or more packages"
-    echo "  u, upgrade          Upgrade all installed packages"
-    echo "  r, remove           Interactively select packages to remove"
-    echo "  r, remove <pkg>...  Remove one or more packages"
-    echo "  n, info <pkg>       Print package information"
-    echo "  l, list <source>    List packages (source: installed, available)"
-    echo "  li                  Alias for 'list installed'"
-    echo "  la                  Alias for 'list available'"
-    echo "  s, search <source>  Interactively search packages (source: installed, available)"
-    echo "  si                  Alias for 'search installed'"
-    echo "  sa                  Alias for 'search available'"
-    echo "  f, refresh          Refresh local package database"
-    echo "  w, which            Print which package manager is being used"
-    echo "  h, help             Print this help"
+    echo "  i,  install          Interactively select packages to install"
+    echo "  i,  install <pkg>... Install one or more packages"
+    echo "  u,  upgrade          Upgrade all installed packages"
+    echo "  r,  remove           Interactively select packages to remove"
+    echo "  r,  remove <pkg>...  Remove one or more packages"
+    echo "  n,  info <pkg>       Print package information"
+    echo "  la, list all         List all packages"
+    echo "  li, list installed   List installed packages"
+    echo "  sa  search all       Interactively search between all packages"
+    echo "  si  search installed Interactively search between installed packages"
+    echo "  f,  refresh          Refresh local package database"
+    echo "  w,  which            Print which package manager is being used"
+    echo "  h,  help             Print this help"
 }
 
 main() {
@@ -83,10 +81,10 @@ main() {
     n | info) info "$@" ;;
     l | list) list "$@" ;;
     li) list installed ;;
-    la) list available ;;
+    la) list all ;;
     s | search) search "$@" ;;
     si) search installed ;;
-    sa) search available ;;
+    sa) search all ;;
     f | refresh) refresh ;;
     w | which) which ;;
     *) die_wrong_usage "invalid <command> argument '$COMMAND'" ;;
@@ -99,7 +97,7 @@ main() {
 
 install() {
     if [ $# -eq 0 ]; then
-        search available | PM=$PM PM_COLOR=$PM_COLOR xargs -ro "$0" install
+        search all | PM=$PM PM_COLOR=$PM_COLOR xargs -ro "$0" install
     else
         "${PM}_install" "$@"
     fi
@@ -160,7 +158,7 @@ is_command() {
 check_source() {
     if [ $# -eq 0 ]; then
         die_wrong_usage "expected <source> argument"
-    elif [ "$1" != installed ] && [ "$1" != available ]; then
+    elif [ "$1" != installed ] && [ "$1" != all ]; then
         die_wrong_usage "invalid <source> argument '$1'"
     fi
 }
@@ -214,15 +212,15 @@ pacman_list_installed() {
     pacman -Q | pacman_format_installed
 }
 
-pacman_list_available() {
-    pacman -Sl | pacman_format_available
+pacman_list_all() {
+    pacman -Sl | pacman_format_all
 }
 
 pacman_format_installed() {
     awk "{ print $AS_NAME \$1 $AS_VERSION \$2 $AS_RESET }"
 }
 
-pacman_format_available() {
+pacman_format_all() {
     awk "{ print $AS_NAME \$2 $AS_GROUP \$1 $AS_VERSION \$3 $AS_STATUS \$4 $AS_RESET }"
 }
 
@@ -254,9 +252,9 @@ paru_list_installed() {
     paru -Q | pacman_format_installed
 }
 
-paru_list_available() {
+paru_list_all() {
     # Unlike yay, this is fast enough and properly sorted
-    paru -Sl | pacman_format_available
+    paru -Sl | pacman_format_all
 }
 
 paru_refresh() {
@@ -287,9 +285,9 @@ yay_list_installed() {
     yay -Q | pacman_format_installed
 }
 
-yay_list_available() {
-    pacman_list_available
-    yay -Sla | pacman_format_available
+yay_list_all() {
+    pacman_list_all
+    yay -Sla | pacman_format_all
 }
 
 yay_refresh() {
@@ -321,7 +319,7 @@ apt_list_installed() {
     dpkg-query --show | awk "{ print $AS_NAME \$1 $AS_VERSION \$2 $AS_RESET }"
 }
 
-apt_list_available() {
+apt_list_all() {
     TMP=$(mktemp)
     dpkg-query --show -f '${package} [installed]\n' >"$TMP"
     apt-cache pkgnames |
@@ -360,7 +358,7 @@ dnf_list_installed() {
     dnf repoquery -q --installed --qf '%{name} %{evr}' | awk "{ print $AS_NAME \$1 $AS_VERSION \$2 $AS_RESET }"
 }
 
-dnf_list_available() {
+dnf_list_all() {
     TMP=$(mktemp)
     dnf repoquery -q --installed --qf '%{name} [installed]' >"$TMP"
     dnf repoquery -q --qf='%{name} %{repoid} %{evr}' |
