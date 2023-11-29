@@ -13,15 +13,15 @@ usage() {
     echo "Commands:"
     echo "  i,  install          Interactively select packages to install"
     echo "  i,  install <pkg>... Install one or more packages"
-    echo "  u,  upgrade          Upgrade all installed packages"
     echo "  r,  remove           Interactively select packages to remove"
     echo "  r,  remove <pkg>...  Remove one or more packages"
+    echo "  u,  upgrade          Upgrade all installed packages"
+    echo "  f,  refresh          Refresh local package database"
     echo "  n,  info <pkg>       Print package information"
     echo "  la, list all         List all packages"
     echo "  li, list installed   List installed packages"
     echo "  sa  search all       Interactively search between all packages"
     echo "  si  search installed Interactively search between installed packages"
-    echo "  f,  refresh          Refresh local package database"
     echo "  w,  which            Print which package manager is being used"
     echo "  h,  help             Print this help"
 }
@@ -103,17 +103,21 @@ install() {
     fi
 }
 
-upgrade() {
-    "${PM}_refresh"
-    "${PM}_upgrade"
-}
-
 remove() {
     if [ $# -eq 0 ]; then
         search installed | PM=$PM PM_COLOR=$PM_COLOR xargs -ro "$0" remove
     else
         "${PM}_remove" "$@"
     fi
+}
+
+upgrade() {
+    "${PM}_refresh"
+    "${PM}_upgrade"
+}
+
+refresh() {
+    "${PM}_refresh"
 }
 
 info() {
@@ -128,10 +132,6 @@ list() {
 search() {
     check_source "$@"
     list "$1" | filter "$1"
-}
-
-refresh() {
-    "${PM}_refresh"
 }
 
 which() {
@@ -204,28 +204,28 @@ pacman_upgrade() {
     sudo pacman -Su
 }
 
-pacman_info() {
-    pacman -Si --color="$PM_COLOR" "$1"
+pacman_refresh() {
+    sudo pacman -Sy
 }
 
-pacman_list_installed() {
-    pacman -Q | pacman_format_installed
+pacman_info() {
+    pacman -Si --color="$PM_COLOR" "$1"
 }
 
 pacman_list_all() {
     pacman -Sl | pacman_format_all
 }
 
-pacman_format_installed() {
-    awk "{ print $AS_NAME \$1 $AS_VERSION \$2 $AS_RESET }"
+pacman_list_installed() {
+    pacman -Q | pacman_format_installed
 }
 
 pacman_format_all() {
     awk "{ print $AS_NAME \$2 $AS_GROUP \$1 $AS_VERSION \$3 $AS_STATUS \$4 $AS_RESET }"
 }
 
-pacman_refresh() {
-    sudo pacman -Sy
+pacman_format_installed() {
+    awk "{ print $AS_NAME \$1 $AS_VERSION \$2 $AS_RESET }"
 }
 
 # =============================================================================
@@ -236,29 +236,28 @@ paru_install() {
     paru -S --needed "$@"
 }
 
+paru_remove() {
+    paru -Rsc "$@"
+}
+
 paru_upgrade() {
     paru -Su
 }
 
-paru_remove() {
-    paru -Rsc "$@"
+paru_refresh() {
+    paru -Sy
 }
 
 paru_info() {
     paru -Si --color="$PM_COLOR" "$1"
 }
 
-paru_list_installed() {
-    paru -Q | pacman_format_installed
-}
-
 paru_list_all() {
-    # Unlike yay, this is fast enough and properly sorted
     paru -Sl | pacman_format_all
 }
 
-paru_refresh() {
-    paru -Sy
+paru_list_installed() {
+    paru -Q | pacman_format_installed
 }
 
 # =============================================================================
@@ -269,29 +268,30 @@ yay_install() {
     yay -S --needed "$@"
 }
 
+yay_remove() {
+    yay -Rsc "$@"
+}
+
 yay_upgrade() {
     yay -Su
 }
 
-yay_remove() {
-    yay -Rsc "$@"
+yay_refresh() {
+    yay -Sy
 }
 
 yay_info() {
     yay -Si --color="$PM_COLOR" "$1"
 }
 
-yay_list_installed() {
-    yay -Q | pacman_format_installed
-}
-
 yay_list_all() {
+    # We want non-AUR results first and pacman is also faster then yay in retrieving them
     pacman_list_all
     yay -Sla | pacman_format_all
 }
 
-yay_refresh() {
-    yay -Sy
+yay_list_installed() {
+    yay -Q | pacman_format_installed
 }
 
 # =============================================================================
@@ -302,21 +302,21 @@ apt_install() {
     sudo apt install "$@"
 }
 
+apt_remove() {
+    sudo apt remove "$@"
+}
+
 apt_upgrade() {
     sudo apt upgrade
 }
 
-apt_remove() {
-    sudo apt remove "$@"
+apt_refresh() {
+    sudo apt update
 }
 
 apt_info() {
     # Using `apt show` is not recommended due to unstable CLI
     apt-cache show "$1"
-}
-
-apt_list_installed() {
-    dpkg-query --show | awk "{ print $AS_NAME \$1 $AS_VERSION \$2 $AS_RESET }"
 }
 
 apt_list_all() {
@@ -329,8 +329,8 @@ apt_list_all() {
     rm "$TMP"
 }
 
-apt_refresh() {
-    sudo apt update
+apt_list_installed() {
+    dpkg-query --show | awk "{ print $AS_NAME \$1 $AS_VERSION \$2 $AS_RESET }"
 }
 
 # =============================================================================
@@ -341,21 +341,21 @@ dnf_install() {
     sudo dnf install "$@"
 }
 
-dnf_upgrade() {
-    sudo dnf upgrade
-}
-
 dnf_remove() {
     sudo dnf remove "$@"
 }
 
-dnf_info() {
-    # Skip the first line which includes headers
-    dnf info -q --color="$PM_COLOR" "$1" | tail -n+2
+dnf_refresh() {
+    sudo dnf check-update
 }
 
-dnf_list_installed() {
-    dnf repoquery -q --installed --qf '%{name} %{evr}' | awk "{ print $AS_NAME \$1 $AS_VERSION \$2 $AS_RESET }"
+dnf_upgrade() {
+    sudo dnf upgrade
+}
+
+dnf_info() {
+    # Skip the first header line
+    dnf info -q --color="$PM_COLOR" "$1" | tail -n+2
 }
 
 dnf_list_all() {
@@ -367,8 +367,8 @@ dnf_list_all() {
     rm "$TMP"
 }
 
-dnf_refresh() {
-    sudo dnf check-update
+dnf_list_installed() {
+    dnf repoquery -q --installed --qf '%{name} %{evr}' | awk "{ print $AS_NAME \$1 $AS_VERSION \$2 $AS_RESET }"
 }
 
 # =============================================================================
