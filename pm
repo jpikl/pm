@@ -44,19 +44,19 @@ main() {
         fi
     fi
 
-    # AWK styling
+    # Output styling
     if [ "$PM_COLOR" = always ]; then
-        AS_NAME='"\033[1m"'
-        AS_GROUP='" \033[1;35m"'
-        AS_VERSION='" \033[1;32m"'
-        AS_STATUS='" \033[1;36m"'
-        AS_RESET='"\033[0m"'
+        ST_NAME='"\033[1m"'
+        ST_GROUP='" \033[1;35m"'
+        ST_VERSION='" \033[1;32m"'
+        ST_STATUS='" \033[1;36m"'
+        ST_RESET='"\033[0m"'
     else
-        AS_NAME='""'
-        AS_GROUP='" "'
-        AS_VERSION='" "'
-        AS_STATUS='" "'
-        AS_RESET='""'
+        ST_NAME='""'
+        ST_GROUP='" "'
+        ST_VERSION='" "'
+        ST_STATUS='" "'
+        ST_RESET='""'
     fi
 
     if [ ! "${PM-}" ]; then
@@ -221,11 +221,11 @@ pacman_list_installed() {
 }
 
 pacman_format_all() {
-    awk "{ print $AS_NAME \$2 $AS_GROUP \$1 $AS_VERSION \$3 $AS_STATUS \$4 $AS_RESET }"
+    awk "{ print $ST_NAME \$2 $ST_GROUP \$1 $ST_VERSION \$3 $ST_STATUS \$4 $ST_RESET }"
 }
 
 pacman_format_installed() {
-    awk "{ print $AS_NAME \$1 $AS_VERSION \$2 $AS_RESET }"
+    awk "{ print $ST_NAME \$1 $ST_VERSION \$2 $ST_RESET }"
 }
 
 # =============================================================================
@@ -285,7 +285,7 @@ yay_info() {
 }
 
 yay_list_all() {
-    # We want non-AUR results first and pacman is also faster then yay in retrieving them
+    # We want non-AUR results first and pacman is also much faster than yay here.
     pacman_list_all
     yay -Sla | pacman_format_all
 }
@@ -325,12 +325,12 @@ apt_list_all() {
     apt-cache pkgnames |
         LC_ALL=C sort |
         join -j1 -a1 - "$TMP" |
-        awk "{ print $AS_NAME \$1 $AS_STATUS \$2 $AS_RESET }"
+        awk "{ print $ST_NAME \$1 $ST_STATUS \$2 $ST_RESET }"
     rm "$TMP"
 }
 
 apt_list_installed() {
-    dpkg-query --show | awk "{ print $AS_NAME \$1 $AS_VERSION \$2 $AS_RESET }"
+    dpkg-query --show | awk "{ print $ST_NAME \$1 $ST_VERSION \$2 $ST_RESET }"
 }
 
 # =============================================================================
@@ -363,12 +363,12 @@ dnf_list_all() {
     dnf repoquery -q --installed --qf '%{name} [installed]' >"$TMP"
     dnf repoquery -q --qf='%{name} %{repoid} %{evr}' |
         join -j1 -a1 - "$TMP" |
-        awk "{ print $AS_NAME \$1 $AS_GROUP \$2 $AS_VERSION \$3 $AS_STATUS \$4 $AS_RESET }"
+        awk "{ print $ST_NAME \$1 $ST_GROUP \$2 $ST_VERSION \$3 $ST_STATUS \$4 $ST_RESET }"
     rm "$TMP"
 }
 
 dnf_list_installed() {
-    dnf repoquery -q --installed --qf '%{name} %{evr}' | awk "{ print $AS_NAME \$1 $AS_VERSION \$2 $AS_RESET }"
+    dnf repoquery -q --installed --qf '%{name} %{evr}' | awk "{ print $ST_NAME \$1 $ST_VERSION \$2 $ST_RESET }"
 }
 
 # =============================================================================
