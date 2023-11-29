@@ -136,11 +136,11 @@ search() {
     check_source "$@"
 
     if [ -t 0 ]; then
-        pm_list "$1" | pm_format "$1" | filter "$1"
+        pm_list "$1" | pm_format "$1" | interactive_filter "$1"
     else
         FILTER_FILE=$(make_temp)
         compile_stdin_filter >"$FILTER_FILE"
-        pm_list "$1" | grep -Ef "$FILTER_FILE" | pm_format "$1" | filter "$1"
+        pm_list "$1" | grep -Ef "$FILTER_FILE" | pm_format "$1" | interactive_filter "$1"
     fi
 }
 
@@ -190,7 +190,7 @@ compile_stdin_filter() {
         awk '{ print "^" $1 "($|\\s)" }'
 }
 
-filter() {
+interactive_filter() {
     if is_command fzf; then
         fzf --exit-0 \
             --multi \
