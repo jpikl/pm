@@ -11,7 +11,7 @@ Wrapper around various package managers with unified CLI.
 
 ## Usage
 
-Run `pm help` to get the usage.
+Run `pm help` for the usage:
 
 ```
 Package manager wrapper (supports: paru yay pacman apt dnf)
@@ -19,35 +19,54 @@ Package manager wrapper (supports: paru yay pacman apt dnf)
 Usage: pm <command>
 
 Commands:
-  i,  install          Interactively select packages to install
-  i,  install <pkg>... Install one or more packages
-  r,  remove           Interactively select packages to remove
-  r,  remove <pkg>...  Remove one or more packages
-  u,  upgrade          Upgrade all installed packages
+  i,  install          Interactively select packages to install.
+  i,  install <pkg>... Install one or more packages.
+  r,  remove           Interactively select packages to remove.
+  r,  remove <pkg>...  Remove one or more packages.
+  u,  upgrade          Upgrade all installed packages.
   f,  refresh          Refresh local package database
-  n,  info <pkg>       Print package information
-  la, list all         List all packages
-  li, list installed   List installed packages
-  sa  search all       Interactively search between all packages
-  si  search installed Interactively search between installed packages
-  w,  which            Print which package manager is being used
-  h,  help             Print this help
+  n,  info <pkg>       Print package information.
+  la, list all         List all packages.
+  li, list installed   List installed packages.
+  sa  search all       Interactively search between all packages.
+  si  search installed Interactively search between installed packages.
+  w,  which            Print which package manager is being used.
+  h,  help             Print this help.
 ```
 
-## FAQ
+## Configuration
 
-### How to enforce a specific package manager?
+Configuration is done through the following environment variables
 
-Use the `PM` environment variable
+### PM
+
+Enforces use of a specific package manager.
+
+Options: `paru`, `yay`, `pacman`, `apt`, `dnf`.
+
+The default package manager is auto detected by checking presence of the binaries listed above (in that particular order).
 
 ```shell
+pacman pm install fzf    # Will auto detect package manager
 PM=pacman pm install fzf # Will use pacman
 PM=yay pm install fzf    # Will use yay
 ```
 
+### PM_COLOR
+
+Controls color output for non-interactive commands.
+
+Options: `auto`, `always`, `never`.
+
+The default is `auto` which outputs colors only when STDOUT is a TTY.
+
+## FAQ
+
 ### How to select multiple packages in interactive mode?
 
 Use the `TAB` key to (un)select multiple packages.
+
+See [fzf docs](https://github.com/junegunn/fzf#using-the-finder) for more keyboard shortcuts.
 
 ### Is this better than my package manager?
 
