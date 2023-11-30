@@ -1,5 +1,7 @@
 #!/usr/bin/env sh
 
+# shellcheck disable=SC2064
+
 set -eu
 
 # Package managers are detected in this order
@@ -138,7 +140,8 @@ search() {
     if [ -t 0 ]; then
         pm_list "$1" | pm_format "$1" | interactive_filter
     else
-        FILTER_FILE=$(make_temp)
+        FILTER_FILE=$(mktemp)
+        trap "rm -f -- '$FILTER_FILE'" EXIT
         compile_stdin_filter >"$FILTER_FILE"
         pm_list "$1" | grep -Ef "$FILTER_FILE" | pm_format "$1" | interactive_filter
     fi
@@ -163,13 +166,6 @@ die_wrong_usage() {
 
 is_command() {
     [ -x "$(command -v "$1")" ]
-}
-
-make_temp() {
-    TMP=$(mktemp "$@")
-    # shellcheck disable=SC2064
-    trap "rm -rf -- '$TMP'" EXIT
-    echo "$TMP"
 }
 
 check_source() {
@@ -257,7 +253,8 @@ pacman_install() {
 
 pacman_install_aur() {
     sudo pacman -S --needed git base-devel
-    AUR_DIR=$(make_temp -d)
+    AUR_DIR=$(mktemp -d)
+    trap "rm -rf -- '$AUR_DIR'" EXIT
     git clone "https://aur.archlinux.org/$1.git" "$AUR_DIR"
     cd "$AUR_DIR"
     makepkg -si
@@ -403,7 +400,8 @@ apt_info() {
 }
 
 apt_list_all() {
-    INSTALLED_PKGS_FILE=$(make_temp)
+    INSTALLED_PKGS_FILE=$(mktemp)
+    trap "rm -f -- '$INSTALLED_PKGS_FILE'" EXIT
     dpkg-query --show -f '${package} [installed]\n' >"$INSTALLED_PKGS_FILE"
     apt-cache pkgnames | LC_ALL=C sort | join -j1 -a1 - "$INSTALLED_PKGS_FILE"
 }
@@ -446,7 +444,8 @@ dnf_info() {
 }
 
 dnf_list_all() {
-    INSTALLED_PKGS_FILE=$(make_temp)
+    INSTALLED_PKGS_FILE=$(mktemp)
+    trap "rm -f -- '$INSTALLED_PKGS_FILE'" EXIT
     dnf repoquery -q --installed --qf '%{name} [installed]' >"$INSTALLED_PKGS_FILE"
     dnf repoquery -q --qf='%{name} %{repoid} %{evr}' | join -j1 -a1 - "$INSTALLED_PKGS_FILE"
 
