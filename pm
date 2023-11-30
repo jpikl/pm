@@ -28,7 +28,7 @@ usage() {
     echo "  h,  help             Print this help."
     echo
     echo "Interactive commands can read additional filters from standard input."
-    echo "Each line is interepreted as a whole package name."
+    echo "Each line is a regular expression (POSIX extended), matching whole package name."
 }
 
 main() {
@@ -179,10 +179,10 @@ check_source() {
 compile_stdin_filter() {
     # 1. Remove comments '#...'
     # 2. Trim lines
-    # 3. Remove invalid names
+    # 3. Remove empty lines
     # 4. Insert matching context ("start of line" ... "end of line" or "whitespace")
     sed -E 's/#.*//;s/^\s+//;s/\s+$//' |
-        { grep -E '[a-zA-Z0-9_-]+' || die "empty stdin filter"; } |
+        { grep . || die "empty stdin filter"; } |
         awk '{ print "^" $1 "($|\\s)" }'
 }
 

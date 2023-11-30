@@ -40,7 +40,7 @@ Commands:
 
 Interactive commands can read additional filters from standard input.
 
-- Each line is interepreted as a whole package name.
+- Each line is a regular expression (POSIX extended), matching whole package name.
 - Hash sign `#` indicates the start of a comment (which is ignored).
 
 ```sh
