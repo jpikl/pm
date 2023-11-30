@@ -410,11 +410,11 @@ apt_list_installed() {
     dpkg-query --show
 }
 
-apk_format_all() {
+apt_format_all() {
     awk "{ print $FMT_NAME \$1 $FMT_STATUS \$2 $FMT_RESET }"
 }
 
-apk_format_installed() {
+apt_format_installed() {
     awk "{ print $FMT_NAME \$1 $FMT_VERSION \$2 $FMT_RESET }"
 }
 
