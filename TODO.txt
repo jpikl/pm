@@ -1,0 +1,5 @@
+apk support
+brew support
+chocolatey support
+scoop support
+zypper support
