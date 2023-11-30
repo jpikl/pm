@@ -4,9 +4,6 @@
 
 set -eu
 
-# Package managers are detected in this order
-PMS="paru yay pacman apt dnf"
-
 usage() {
     echo "Package manager wrapper (supports: $PMS)"
     echo
@@ -64,17 +61,7 @@ main() {
         FMT_RESET='""'
     fi
 
-    if [ ! "${PM-}" ]; then
-        for NAME in $PMS; do
-            if is_command "$NAME"; then
-                PM=$NAME
-                break
-            fi
-        done
-        if [ ! "${PM-}" ]; then
-            die "no supported package manager found ($PMS)"
-        fi
-    fi
+    pm_detect
 
     COMMAND=$1
     shift
@@ -203,8 +190,25 @@ interactive_filter() {
 }
 
 # =============================================================================
-# Dispatch
+# PM wrapper
 # =============================================================================
+
+# Package managers are detected in this order
+PMS="paru yay pacman apt dnf"
+
+pm_detect() {
+    if [ ! "${PM-}" ]; then
+        for NAME in $PMS; do
+            if is_command "$NAME"; then
+                PM=$NAME
+                break
+            fi
+        done
+        if [ ! "${PM-}" ]; then
+            die "no supported package manager found ($PMS)"
+        fi
+    fi
+}
 
 pm_install() {
     "${PM}_install" "$@"
@@ -240,24 +244,15 @@ pm_format() {
 
 pacman_install() {
     for PKG in "$@"; do
-        if [ "$PKG" = paru ] || [ "$PKG" = paru-bin ] || [ "$PKG" = yay ] || [ "$PKG" = yay-bin ]; then
-            # Custom install procedure for aur helpers
-            pacman_install_aur "$PKG"
+        if aur_helpers_contain "$PKG"; then
+            # Custom install procedure for AUR helpers
+            aur_helpers_install "$PKG"
             # Re-run the installation for the remaining packages (should use the installed helper as PM)
             printf "%s\n" "$@" | grep -Fv "$PKG" | xargs -ro "$0" install
             return
         fi
     done
     sudo pacman -S --needed "$@"
-}
-
-pacman_install_aur() {
-    sudo pacman -S --needed git base-devel
-    AUR_DIR=$(mktemp -d)
-    trap "rm -rf -- '$AUR_DIR'" EXIT
-    git clone "https://aur.archlinux.org/$1.git" "$AUR_DIR"
-    cd "$AUR_DIR"
-    makepkg -si
 }
 
 pacman_remove() {
@@ -273,15 +268,20 @@ pacman_refresh() {
 }
 
 pacman_info() {
-    pacman -Si --color="$PM_COLOR" "$1"
+    if aur_helpers_contain "$1"; then
+        aur_helpers_info "$1"
+    else
+        pacman -Si --color="$PM_COLOR" "$1"
+    fi
 }
 
 pacman_list_all() {
-    pacman -Sl | awk '{ print $2 " " $1 " " $3 " " $4 }'
+    pacman -Sl --color=never | awk '{ print $2 " " $1 " " $3 " " $4 }'
+    aur_helpers_list
 }
 
 pacman_list_installed() {
-    pacman -Q
+    pacman -Q --color=never
 }
 
 pacman_format_all() {
@@ -290,6 +290,41 @@ pacman_format_all() {
 
 pacman_format_installed() {
     awk "{ print $FMT_NAME \$1 $FMT_VERSION \$2 $FMT_RESET }"
+}
+
+# =============================================================================
+# AUR helpers
+# =============================================================================
+
+AUR_HELPERS="paru paru-bin yay yay-bin"
+
+aur_helpers_contain() {
+    for NAME in $AUR_HELPERS; do
+        if [ "$1" = "$NAME" ]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+aur_helpers_install() {
+    sudo pacman -S --needed git base-devel
+    AUR_DIR=$(mktemp -d)
+    trap "rm -rf -- '$AUR_DIR'" EXIT
+    git clone "https://aur.archlinux.org/$1.git" "$AUR_DIR"
+    cd "$AUR_DIR"
+    makepkg -si
+}
+
+aur_helpers_info() {
+    printf "\e[1mRepository  :\e[0m aur\n"
+    printf "\e[1mName        :\e[0m %s\n" "$1"
+    printf "\e[1mDescription :\e[0m AUR helper\n"
+}
+
+aur_helpers_list() {
+    # shellcheck disable=SC2086
+    printf "%s aur\n" $AUR_HELPERS
 }
 
 # =============================================================================
@@ -317,11 +352,11 @@ paru_info() {
 }
 
 paru_list_all() {
-    paru -Sl | awk '{ print $2 " " $1 " " $3 " " $4 }'
+    paru -Sl --color=never | awk '{ print $2 " " $1 " " $3 " " $4 }'
 }
 
 paru_list_installed() {
-    paru -Q
+    paru -Q --color=never
 }
 
 paru_format_all() {
@@ -358,12 +393,14 @@ yay_info() {
 
 yay_list_all() {
     # We want non-AUR results first and pacman is also much faster than yay here.
-    pacman_list_all
-    yay -Sla | awk '{ print $2 " " $1 " " $3 " " $4 }'
+    {
+        pacman -Sl --color=never
+        yay -Sla --color=never
+    } | awk '{ print $2 " " $1 " " $3 " " $4 }'
 }
 
 yay_list_installed() {
-    yay -Q
+    yay -Q --color=never
 }
 
 yay_format_all() {
