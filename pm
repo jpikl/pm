@@ -194,7 +194,7 @@ interactive_filter() {
 # =============================================================================
 
 # Package managers are detected in this order
-PMS="paru yay pacman apt dnf"
+PMS="paru yay pacman apt dnf scoop"
 
 pm_detect() {
     if [ ! "${PM-}" ]; then
@@ -498,6 +498,50 @@ dnf_format_all() {
 
 dnf_format_installed() {
     awk "{ print $FMT_NAME \$1 $FMT_VERSION \$2 $FMT_RESET }"
+}
+
+# =============================================================================
+# Scoop
+# =============================================================================
+
+scoop_install() {
+    scoop install "$@"
+}
+
+scoop_remove() {
+    scoop uninstall "$@"
+}
+
+scoop_refresh() {
+    :
+}
+
+scoop_upgrade() {
+    scoop update
+}
+
+scoop_info() {
+    scoop info "$1" | tail -n+3
+}
+
+scoop_list_all() {
+    INSTALLED_PKGS_FILE=$(mktemp)
+    trap "rm -f -- '$INSTALLED_PKGS_FILE'" EXIT
+    scoop list | tail -n+5 | grep . | awk '{ print $1 " [installed]" }' >"$INSTALLED_PKGS_FILE"
+    scoop search | tail -n+5 | grep . | awk '{ print $1 " " $3 " " $2 }' | join -j1 -a1 - "$INSTALLED_PKGS_FILE"
+
+}
+
+scoop_list_installed() {
+    scoop list | tail -n+5 | grep . | awk '{ print $1 " " $3 " " $2 }'
+}
+
+scoop_format_all() {
+    awk "{ print $FMT_NAME \$1 $FMT_GROUP \$2 $FMT_VERSION \$3 $FMT_STATUS \$4 $FMT_RESET }"
+}
+
+scoop_format_installed() {
+    awk "{ print $FMT_NAME \$1 $FMT_GROUP \$2 $FMT_VERSION \$3 $FMT_RESET }"
 }
 
 # =============================================================================

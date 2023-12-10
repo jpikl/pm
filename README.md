@@ -2,10 +2,10 @@
 
 Wrapper around various package managers with unified CLI.
 
-- Supports: [pacman][pacman], [paru][paru], [yay][yay], [apt][apt], [dnf][dnf].
+- Supports: [pacman][pacman], [paru][paru], [yay][yay], [apt][apt], [dnf][dnf], [scoop][scoop].
 - Interactive package selection using [fzf][fzf] with package info preview.
 - A single self-contained script. Just copy it somewhere on the `$PATH` and you're good to go.
-- POSIX compliant (will run literally everywhere). 
+- POSIX compliant (will run literally everywhere).
 
 ![Demo usage](demo.gif)
 
@@ -114,4 +114,5 @@ Just create [an issue](https://github.com/jpikl/pm/issues) for the support and I
 [fzf]: https://github.com/junegunn/fzf
 [pacman]: https://wiki.archlinux.org/title/Pacman
 [paru]: https://github.com/Morganamilo/paru
+[scoop]: https://scoop.sh
 [yay]: https://github.com/Jguer/yay
