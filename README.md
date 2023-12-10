@@ -14,7 +14,7 @@ Wrapper around various package managers with unified CLI.
 Run `pm help` for the usage:
 
 ```
-Package manager wrapper (supports: paru yay pacman apt dnf)
+Package manager wrapper (supports: paru yay pacman apt dnf scoop)
 
 Usage: pm <command>
 
@@ -24,7 +24,7 @@ Commands:
   r,  remove           Interactively select packages to remove.
   r,  remove <pkg>...  Remove one or more packages.
   u,  upgrade          Upgrade all installed packages.
-  f,  refresh          Refresh local package database.
+  f,  fetch            Update local package database.
   n,  info <pkg>       Print package information.
   la, list all         List all packages.
   li, list installed   List installed packages.

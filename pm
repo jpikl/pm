@@ -15,7 +15,7 @@ usage() {
     echo "  r,  remove           Interactively select packages to remove."
     echo "  r,  remove <pkg>...  Remove one or more packages."
     echo "  u,  upgrade          Upgrade all installed packages."
-    echo "  f,  refresh          Refresh local package database."
+    echo "  f,  fetch            Update local package database."
     echo "  n,  info <pkg>       Print package information."
     echo "  la, list all         List all packages."
     echo "  li, list installed   List installed packages."
@@ -77,7 +77,7 @@ main() {
     s | search) search "$@" ;;
     si) search installed ;;
     sa) search all ;;
-    f | refresh) refresh ;;
+    f | fetch) fetch ;;
     w | which) which ;;
     *) die_wrong_usage "invalid <command> argument '$COMMAND'" ;;
     esac
@@ -104,12 +104,12 @@ remove() {
 }
 
 upgrade() {
-    pm_refresh
+    pm_fetch
     pm_upgrade
 }
 
-refresh() {
-    pm_refresh
+fetch() {
+    pm_fetch
 }
 
 info() {
@@ -222,8 +222,8 @@ pm_upgrade() {
     "${PM}_upgrade"
 }
 
-pm_refresh() {
-    "${PM}_refresh"
+pm_fetch() {
+    "${PM}_fetch"
 }
 
 pm_info() {
@@ -263,7 +263,7 @@ pacman_upgrade() {
     sudo pacman -Su
 }
 
-pacman_refresh() {
+pacman_fetch() {
     sudo pacman -Sy
 }
 
@@ -343,7 +343,7 @@ paru_upgrade() {
     paru -Su
 }
 
-paru_refresh() {
+paru_fetch() {
     paru -Sy
 }
 
@@ -383,7 +383,7 @@ yay_upgrade() {
     yay -Su
 }
 
-yay_refresh() {
+yay_fetch() {
     yay -Sy
 }
 
@@ -427,7 +427,7 @@ apt_upgrade() {
     sudo apt upgrade
 }
 
-apt_refresh() {
+apt_fetch() {
     sudo apt update
 }
 
@@ -467,7 +467,7 @@ dnf_remove() {
     sudo dnf remove "$@"
 }
 
-dnf_refresh() {
+dnf_fetch() {
     sudo dnf check-update
 }
 
@@ -512,7 +512,7 @@ scoop_remove() {
     scoop uninstall "$@"
 }
 
-scoop_refresh() {
+scoop_fetch() {
     :
 }
 
