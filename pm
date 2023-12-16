@@ -63,6 +63,9 @@ main() {
 
     pm_detect
 
+    PM_CACHE_DIR=${XDG_CACHE_DIR:-$HOME/.cache}/pm/$PM
+    mkdir -p "$PM_CACHE_DIR"
+
     COMMAND=$1
     shift
 
@@ -88,6 +91,9 @@ main() {
 # =============================================================================
 
 install() {
+    if [ ! -f "$PM_CACHE_DIR/last-fetch" ] || [ "$(cat "$PM_CACHE_DIR/last-fetch")" != "$(current_date)" ]; then
+        pm_fetch
+    fi
     if [ $# -eq 0 ]; then
         search all | PM=$PM PM_COLOR=$PM_COLOR xargs -ro "$0" install
     else
@@ -155,6 +161,10 @@ is_command() {
     [ -x "$(command -v "$1")" ]
 }
 
+current_date() {
+    date -u +%Y-%m-%d
+}
+
 check_source() {
     if [ $# -eq 0 ]; then
         die_wrong_usage "expected <source> argument"
@@ -190,11 +200,11 @@ interactive_filter() {
 }
 
 skip_table_header() {
-  while read -r LINE; do
-    case "$LINE" in
-      --*) cat ;;
-    esac
-  done
+    while read -r LINE; do
+        case "$LINE" in
+        --*) cat ;;
+        esac
+    done
 }
 
 # =============================================================================
@@ -232,6 +242,7 @@ pm_upgrade() {
 
 pm_fetch() {
     "${PM}_fetch"
+    current_date >"$PM_CACHE_DIR/last-fetch"
 }
 
 pm_info() {
@@ -521,7 +532,9 @@ scoop_remove() {
 }
 
 scoop_fetch() {
-    :
+    # Scoop search is very slow (especialy with multiple buckets) so we do create our own cache
+    echo >&2 "Fetching packages..."
+    scoop search | skip_table_header | grep . | awk '{ print $1 " " $3 " " $2 }' >"$PM_CACHE_DIR/packages"
 }
 
 scoop_upgrade() {
@@ -536,7 +549,8 @@ scoop_list_all() {
     INSTALLED_PKGS_FILE=$(mktemp)
     trap "rm -f -- '$INSTALLED_PKGS_FILE'" EXIT
     scoop list | skip_table_header | grep . | awk '{ print $1 " [installed]" }' >"$INSTALLED_PKGS_FILE"
-    scoop search | skip_table_header | grep . | awk '{ print $1 " " $3 " " $2 }' | join -j1 -a1 - "$INSTALLED_PKGS_FILE"
+    [ -f "$PM_CACHE_DIR/packages" ] || scoop_fetch
+    join -j1 -a1 "$PM_CACHE_DIR/packages" "$INSTALLED_PKGS_FILE"
 
 }
 
