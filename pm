@@ -189,6 +189,14 @@ interactive_filter() {
     fi
 }
 
+skip_table_header() {
+  while read -r LINE; do
+    case "$LINE" in
+      --*) cat ;;
+    esac
+  done
+}
+
 # =============================================================================
 # PM wrapper
 # =============================================================================
@@ -477,7 +485,7 @@ dnf_upgrade() {
 
 dnf_info() {
     # Skip the first header line
-    dnf info -q --color="$PM_COLOR" "$1" | tail -n+2
+    dnf info -q --color="$PM_COLOR" "$1" | grep :
 }
 
 dnf_list_all() {
@@ -521,19 +529,19 @@ scoop_upgrade() {
 }
 
 scoop_info() {
-    scoop info "$1" | tail -n+3
+    scoop info "$1" | grep .
 }
 
 scoop_list_all() {
     INSTALLED_PKGS_FILE=$(mktemp)
     trap "rm -f -- '$INSTALLED_PKGS_FILE'" EXIT
-    scoop list | tail -n+5 | grep . | awk '{ print $1 " [installed]" }' >"$INSTALLED_PKGS_FILE"
-    scoop search | tail -n+5 | grep . | awk '{ print $1 " " $3 " " $2 }' | join -j1 -a1 - "$INSTALLED_PKGS_FILE"
+    scoop list | skip_table_header | grep . | awk '{ print $1 " [installed]" }' >"$INSTALLED_PKGS_FILE"
+    scoop search | skip_table_header | grep . | awk '{ print $1 " " $3 " " $2 }' | join -j1 -a1 - "$INSTALLED_PKGS_FILE"
 
 }
 
 scoop_list_installed() {
-    scoop list | tail -n+5 | grep . | awk '{ print $1 " " $3 " " $2 }'
+    scoop list | skip_table_header | grep . | awk '{ print $1 " " $3 " " $2 }'
 }
 
 scoop_format_all() {
