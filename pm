@@ -4,6 +4,8 @@
 
 set -eu
 
+export LC_ALL=C
+
 usage() {
     echo "Package manager wrapper (supports: $PMS)"
     echo
@@ -459,7 +461,7 @@ apt_list_all() {
     INSTALLED_PKGS_FILE=$(mktemp)
     trap "rm -f -- '$INSTALLED_PKGS_FILE'" EXIT
     dpkg-query --show -f '${package} [installed]\n' >"$INSTALLED_PKGS_FILE"
-    apt-cache pkgnames | LC_ALL=C sort | join -j1 -a1 - "$INSTALLED_PKGS_FILE"
+    apt-cache pkgnames | sort | join -j1 -a1 - "$INSTALLED_PKGS_FILE"
 }
 
 apt_list_installed() {
@@ -487,7 +489,8 @@ dnf_remove() {
 }
 
 dnf_fetch() {
-    sudo dnf check-update
+    # dnf exists with code 100 in distrobox https://github.com/fedora-cloud/docker-brew-fedora/issues/46
+    sudo dnf check-update || true
 }
 
 dnf_upgrade() {
@@ -504,7 +507,6 @@ dnf_list_all() {
     trap "rm -f -- '$INSTALLED_PKGS_FILE'" EXIT
     dnf repoquery -q --installed --qf '%{name} [installed]' >"$INSTALLED_PKGS_FILE"
     dnf repoquery -q --qf='%{name} %{repoid} %{evr}' | join -j1 -a1 - "$INSTALLED_PKGS_FILE"
-
 }
 
 dnf_list_installed() {
@@ -534,7 +536,7 @@ scoop_remove() {
 scoop_fetch() {
     # Scoop search is very slow (especialy with multiple buckets) so we do create our own cache
     echo >&2 "Fetching packages..."
-    scoop search | skip_table_header | grep . | awk '{ print $1 " " $3 " " $2 }' | LC_ALL=C sort >"$PM_CACHE_DIR/packages"
+    scoop search | skip_table_header | grep . | awk '{ print $1 " " $3 " " $2 }' | sort >"$PM_CACHE_DIR/packages"
 }
 
 scoop_upgrade() {
