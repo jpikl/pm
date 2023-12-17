@@ -50,8 +50,8 @@ main() {
     if [ "$PM_COLOR" = always ]; then
         FMT_NAME='"\033[1m"'
         FMT_GROUP='" \033[1;35m"'
-        FMT_VERSION='" \033[1;32m"'
-        FMT_STATUS='" \033[1;36m"'
+        FMT_VERSION='" \033[1;36m"'
+        FMT_STATUS='" \033[1;32m"'
         FMT_RESET='"\033[0m"'
     else
         FMT_NAME='""'
