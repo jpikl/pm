@@ -214,7 +214,7 @@ skip_table_header() {
 # =============================================================================
 
 # Package managers are detected in this order
-PMS="paru yay pacman apt dnf scoop"
+PMS="paru yay pacman apt dnf brew scoop"
 
 pm_detect() {
     if [ ! "${PM-}" ]; then
@@ -519,6 +519,52 @@ dnf_format_all() {
 
 dnf_format_installed() {
     awk "{ print $FMT_NAME \$1 $FMT_VERSION \$2 $FMT_RESET }"
+}
+
+# =============================================================================
+# Brew
+# =============================================================================
+
+brew_install() {
+    brew install "$@"
+}
+
+brew_remove() {
+    brew uninstall "$@"
+}
+
+brew_fetch() {
+    brew update
+}
+
+brew_upgrade() {
+    brew upgrade
+}
+
+brew_info() {
+    HOMEBREW_COLOR=1 brew info "$1"
+}
+
+brew_list_all() {
+    INSTALLED_PKGS_FILE=$(mktemp)
+    trap "rm -f -- '$INSTALLED_PKGS_FILE'" EXIT
+    brew list -1 | awk '{ print $1 " [installed]" }' >"$INSTALLED_PKGS_FILE"
+    {
+        brew formulae
+        [ "$(uname -s)" = Darwin ] && brew casks
+    } | grep . | sort -u | join -j1 -a1 - "$INSTALLED_PKGS_FILE"
+}
+
+brew_list_installed() {
+    brew list -1
+}
+
+brew_format_all() {
+    awk "{ print $FMT_NAME \$1 $FMT_STATUS \$2 $FMT_RESET }"
+}
+
+brew_format_installed() {
+    awk "{ print $FMT_NAME \$1 $FMT_RESET }"
 }
 
 # =============================================================================
