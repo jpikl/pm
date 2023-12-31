@@ -2,7 +2,7 @@
 
 Wrapper around various package managers with unified CLI.
 
-- Supports: [pacman][pacman], [paru][paru], [yay][yay], [apt][apt], [dnf][dnf], [brew][brew], [scoop][scoop].
+- Supports: [pacman][pacman], [paru][paru], [yay][yay], [apt][apt], [dnf][dnf], [zypper][zypper], [brew][brew], [scoop][scoop].
 - Interactive package selection using [fzf][fzf] with package info preview.
 - A single self-contained script. Just copy it somewhere on the `$PATH` and you're good to go.
 - POSIX compliant (will run literally everywhere).
@@ -14,7 +14,7 @@ Wrapper around various package managers with unified CLI.
 Run `pm help` for the usage:
 
 ```
-Package manager wrapper (supports: paru yay pacman apt dnf brew scoop)
+Package manager wrapper (supports: paru yay pacman apt dnf zypper brew scoop)
 
 Usage: pm <command>
 
@@ -117,3 +117,4 @@ Just create [an issue](https://github.com/jpikl/pm/issues) for the support and I
 [paru]: https://github.com/Morganamilo/paru
 [scoop]: https://scoop.sh
 [yay]: https://github.com/Jguer/yay
+[zypper]: https://en.opensuse.org/Portal:Zypper

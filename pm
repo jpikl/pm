@@ -214,7 +214,7 @@ skip_table_header() {
 # =============================================================================
 
 # Package managers are detected in this order
-PMS="paru yay pacman apt dnf brew scoop"
+PMS="paru yay pacman apt dnf zypper brew scoop"
 
 pm_detect() {
     if [ ! "${PM-}" ]; then
@@ -522,6 +522,49 @@ dnf_format_installed() {
 }
 
 # =============================================================================
+# Zypper
+# =============================================================================
+
+zypper_install() {
+    # Confirmation after interactive package selection does not work (user input from stdin is not read)
+    sudo zypper install --no-confirm "$@"
+}
+
+zypper_remove() {
+    # Confirmation after interactive package selection does not work (user input from stdin is not read)
+    sudo zypper remove --no-confirm "$@"
+}
+
+zypper_fetch() {
+    sudo zypper refresh
+}
+
+zypper_upgrade() {
+    sudo zypper update
+}
+
+zypper_info() {
+    zypper info "$1" | skip_table_header
+}
+
+zypper_list_all() {
+    zypper packages --sort-by-name | skip_table_header | awk 'BEGIN { FS = "|" } ; { if (substr($1, 0, 1) == "i") print $3 $2 $4 "[installed]"; else print $3 $2 $4 }'
+}
+
+zypper_list_installed() {
+    # Filter out duplicated entries with alternate version available (lines starting with 'v' status)
+    zypper packages --sort-by-name --installed-only | skip_table_header | grep -v '^v' | awk 'BEGIN { FS = "|" } ; { print $3 $2 $4 }'
+}
+
+zypper_format_all() {
+    awk "{ print $FMT_NAME \$1 $FMT_GROUP \$2 $FMT_VERSION \$3 $FMT_STATUS \$4 $FMT_RESET }"
+}
+
+zypper_format_installed() {
+    awk "{ print $FMT_NAME \$1 $FMT_GROUP \$2 $FMT_VERSION \$3 $FMT_RESET }"
+}
+
+# =============================================================================
 # Brew
 # =============================================================================
 
@@ -542,7 +585,8 @@ brew_upgrade() {
 }
 
 brew_info() {
-    HOMEBREW_COLOR=1 brew info "$1"
+    [ "$PM_COLOR" = always ] && export HOMEBREW_COLOR=1
+    brew info "$1"
 }
 
 brew_list_all() {
