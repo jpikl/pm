@@ -68,7 +68,7 @@ Configuration is done through the following environment variables
 
 Enforces use of a specific package manager.
 
-Options: `paru`, `yay`, `pacman`, `apt`, `dnf`.
+Options: `paru`, `yay`, `pacman`, `apt`, `dnf`, `zypper`, `apk`, `brew`, `scoop`.
 
 The default package manager is auto detected by checking presence of the binaries listed above (in that particular order).
 
