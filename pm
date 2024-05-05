@@ -214,7 +214,7 @@ skip_table_header() {
 # =============================================================================
 
 # Package managers are detected in this order
-PMS="paru yay pacman apt dnf zypper brew scoop"
+PMS="paru yay pacman apt dnf zypper apk brew scoop"
 
 pm_detect() {
     if [ ! "${PM-}" ]; then
@@ -561,6 +561,49 @@ zypper_format_all() {
 }
 
 zypper_format_installed() {
+    awk "{ print $FMT_NAME \$1 $FMT_GROUP \$2 $FMT_VERSION \$3 $FMT_RESET }"
+}
+
+# =============================================================================
+# APK
+# =============================================================================
+
+apk_install() {
+    sudo apk add "$@"
+}
+
+apk_remove() {
+    sudo apk del "$@"
+}
+
+apk_fetch() {
+    sudo apk update
+}
+
+apk_upgrade() {
+    sudo apk upgrade
+}
+
+apk_info() {
+    apk info "$1"
+}
+
+apk_list_all() {
+    # First `sed` splits the version from package name `zlib-1.3.1-r0` -> `zlib 1.3.1-r0`
+    # Seconds `sed` removes license `(...)` like `(BSD-3-Clause AND Apache-2.0 AND MIT)` to get rid of problematic whitespaces
+    apk list --available | sed -E 's/-(\d)/ \1/;s/\([^)]+\)//' | awk '{ print $1 " " $4 " " $2 " " $5 }'
+}
+
+apk_list_installed() {
+    # `sed` splits the version from package name `zlib-1.3.1-r0` -> `zlib 1.3.1-r0`
+    apk list --installed | sed -E 's/-(\d)/ \1/' | awk '{ print $1 " " $4 " " $2 }'
+}
+
+apk_format_all() {
+    awk "{ print $FMT_NAME \$1 $FMT_GROUP \$2 $FMT_VERSION \$3 $FMT_STATUS \$4 $FMT_RESET }"
+}
+
+apk_format_installed() {
     awk "{ print $FMT_NAME \$1 $FMT_GROUP \$2 $FMT_VERSION \$3 $FMT_RESET }"
 }
 

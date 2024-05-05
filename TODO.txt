@@ -1,4 +1,3 @@
-apk support
 brew support
 chocolatey support
 zypper support

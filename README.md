@@ -2,7 +2,7 @@
 
 Wrapper around various package managers with unified CLI.
 
-- Supports: [pacman][pacman], [paru][paru], [yay][yay], [apt][apt], [dnf][dnf], [zypper][zypper], [brew][brew], [scoop][scoop].
+- Supports: [pacman][pacman], [paru][paru], [yay][yay], [apt][apt], [dnf][dnf], [zypper][zypper], [apk][apk], [brew][brew], [scoop][scoop].
 - Interactive package selection using [fzf][fzf] with package info preview.
 - A single self-contained script. Just copy it somewhere on the `$PATH` and you're good to go.
 - POSIX compliant (will run literally everywhere).
@@ -14,7 +14,7 @@ Wrapper around various package managers with unified CLI.
 Run `pm help` for the usage:
 
 ```
-Package manager wrapper (supports: paru yay pacman apt dnf zypper brew scoop)
+Package manager wrapper (supports: paru yay pacman apt dnf zypper apk brew scoop)
 
 Usage: pm <command>
 
@@ -110,6 +110,7 @@ Just create [an issue](https://github.com/jpikl/pm/issues) for the support and I
 `pm` is licensed under the [MIT license](LICENSE).
 
 [apt]: https://salsa.debian.org/apt-team/apt
+[apk]: https://wiki.alpinelinux.org/wiki/Alpine_Package_Keeper
 [brew]: https://brew.sh
 [dnf]: https://github.com/rpm-software-management/dnf
 [fzf]: https://github.com/junegunn/fzf
