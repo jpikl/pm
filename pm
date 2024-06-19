@@ -9,7 +9,7 @@ export LC_ALL=C
 usage() {
     echo "Package manager wrapper (supports: $PMS)"
     echo
-    echo "Usage: ${0##*/} <command>"
+    echo "Usage: $0 <command>"
     echo
     echo "Commands:"
     echo "  i,  install          Interactively select packages to install."
@@ -151,12 +151,12 @@ which() {
 # =============================================================================
 
 die() {
-    echo >&2 "${0##*/}: $1"
+    echo >&2 "$0: $1"
     exit 1
 }
 
 die_wrong_usage() {
-    die "$1, run '${0##*/} help' for usage"
+    die "$1, run '$0 help' for usage"
 }
 
 is_command() {
@@ -197,7 +197,7 @@ interactive_filter() {
             --preview="PM=$PM PM_COLOR=$PM_COLOR $0 info {1}" |
             cut -d" " -f1
     else
-        die "fzf is not available, run '${0##*/} install fzf' first"
+        die "fzf is not available, run '$0 install fzf' first"
     fi
 }
 
