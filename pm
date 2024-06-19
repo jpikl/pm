@@ -97,7 +97,7 @@ install() {
         pm_fetch
     fi
     if [ $# -eq 0 ]; then
-        search all | PM=$PM PM_COLOR=$PM_COLOR xargs -ro "$0" install
+        search all | PM=$PM PM_COLOR=$PM_COLOR xargs_self install
     else
         pm_install "$@"
     fi
@@ -105,7 +105,7 @@ install() {
 
 remove() {
     if [ $# -eq 0 ]; then
-        search installed | PM=$PM PM_COLOR=$PM_COLOR xargs -ro "$0" remove
+        search installed | PM=$PM PM_COLOR=$PM_COLOR xargs_self remove
     else
         pm_remove "$@"
     fi
@@ -209,6 +209,13 @@ skip_table_header() {
     done
 }
 
+xargs_self() {
+    # Some older xargs implementations (busybox < 1.36) do not support `-o` option to reopen /dev/tty as stdin.
+    # This is a workaround suggested by `man xargs`.
+    # shellcheck disable=SC2016
+    xargs -r sh -c '"$0" "$@" </dev/tty' "$0" "$@"
+}
+
 # =============================================================================
 # PM wrapper
 # =============================================================================
@@ -269,7 +276,7 @@ pacman_install() {
             # Custom install procedure for AUR helpers
             aur_helpers_install "$PKG"
             # Re-run the installation for the remaining packages (should use the installed helper as PM)
-            printf "%s\n" "$@" | grep -Fv "$PKG" | xargs -ro "$0" install
+            printf "%s\n" "$@" | grep -Fv "$PKG" | xargs_self install
             return
         fi
     done
