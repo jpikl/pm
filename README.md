@@ -5,7 +5,7 @@ Wrapper around various package managers with unified CLI.
 - Supports: [pacman][pacman], [paru][paru], [yay][yay], [apt][apt], [dnf][dnf], [zypper][zypper], [apk][apk], [brew][brew], [scoop][scoop].
 - Interactive package selection using [fzf][fzf] with package info preview.
 - A single self-contained script. Just copy it somewhere on the `$PATH` and you're good to go.
-- POSIX compliant (will run literally everywhere).
+- POSIX compliant (will run literally everywhere, including [Termux][termux]).
 
 ![Demo usage](demo.gif)
 
@@ -70,13 +70,27 @@ Enforces use of a specific package manager.
 
 Options: `paru`, `yay`, `pacman`, `apt`, `dnf`, `zypper`, `apk`, `brew`, `scoop`.
 
-The default package manager is auto detected by checking presence of the binaries listed above (in that particular order).
+The default package manager is auto detected by checking availability of the binaries listed above (in that particular order).
 
 ```shell
-pacman pm install fzf    # Will auto detect package manager
-PM=pacman pm install fzf # Will use pacman
-PM=yay pm install fzf    # Will use yay
+pm install fzf           # Auto detect package manager
+PM=pacman pm install fzf # Use pacman
+PM=yay pm install fzf    # Use yay
 ```
+
+### PM_SUDO
+
+Controls which program is used to run operations as root.
+
+```shell
+PM_SUDO=sudo-rs pm install fzf # Use alternative sudo command
+PM_SUDO=doas pm install fzf    # Use alternative sudo command
+PM_SUDO= pm install fzf        # Disable execution as root
+```
+
+The default value is `sudo`. In case the `sudo` binary is not available, `pm` checks for alternatives like `sudo-rs` or `doas`.
+
+When running inside [Termux][termux], the execution as root is disabled by default (unless `PM_SUDO` is explicitly set).
 
 ### PM_COLOR
 
@@ -84,7 +98,7 @@ Controls color output for non-interactive commands.
 
 Options: `auto`, `always`, `never`.
 
-The default is `auto` which outputs colors only when STDOUT is a TTY.
+The default value is `auto` which outputs colors only when STDOUT is a TTY.
 
 ## FAQ
 
@@ -117,5 +131,6 @@ Just create [an issue](https://github.com/jpikl/pm/issues) for the support and I
 [pacman]: https://wiki.archlinux.org/title/Pacman
 [paru]: https://github.com/Morganamilo/paru
 [scoop]: https://scoop.sh
+[termux]: https://termux.dev
 [yay]: https://github.com/Jguer/yay
 [zypper]: https://en.opensuse.org/Portal:Zypper

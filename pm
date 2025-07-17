@@ -40,13 +40,29 @@ main() {
         exit
     fi
 
-    if [ ! "${PM_COLOR-}" ]; then
+    if [ ! "${PM_COLOR+is_set}" ]; then
         if [ -t 1 ]; then
             PM_COLOR="always"
         else
             PM_COLOR="never"
         fi
     fi
+
+    if [ ! "${PM_SUDO+is_set}" ]; then
+        PM_SUDO=
+        # Termux package installation does not require sudo
+        if [ ! "${TERMUX_VERSION-}" ]; then
+            for NAME in sudo sudo-rs doas; do
+                if is_command "$NAME"; then
+                    PM_SUDO="$NAME"
+                    break
+                fi
+            done
+        fi
+    fi
+
+    # We cannot pass empty sudo command option to AUR helpers, so we use `env` as workaround.
+    AUR_SUDO=${PM_SUDO:-env}
 
     # Output formatting
     if [ "$PM_COLOR" = always ]; then
@@ -216,6 +232,14 @@ xargs_self() {
     xargs -r sh -c '"$0" "$@" </dev/tty' "$0" "$@"
 }
 
+with_sudo() {
+    if [ "$PM_SUDO" ]; then
+        "$PM_SUDO" "$@"
+    else
+        "$@"
+    fi
+}
+
 # =============================================================================
 # PM wrapper
 # =============================================================================
@@ -280,19 +304,19 @@ pacman_install() {
             return
         fi
     done
-    sudo pacman -S --needed "$@"
+    with_sudo pacman -S --needed "$@"
 }
 
 pacman_remove() {
-    sudo pacman -Rsc "$@"
+    with_sudo pacman -Rsc "$@"
 }
 
 pacman_upgrade() {
-    sudo pacman -Su
+    with_sudo pacman -Su
 }
 
 pacman_fetch() {
-    sudo pacman -Sy
+    with_sudo pacman -Sy
 }
 
 pacman_info() {
@@ -336,7 +360,7 @@ aur_helpers_contain() {
 }
 
 aur_helpers_install() {
-    sudo pacman -S --needed git base-devel
+    with_sudo pacman -S --needed git base-devel
     AUR_DIR=$(mktemp -d)
     trap "rm -rf -- '$AUR_DIR'" EXIT
     git clone "https://aur.archlinux.org/$1.git" "$AUR_DIR"
@@ -360,19 +384,19 @@ aur_helpers_list() {
 # =============================================================================
 
 paru_install() {
-    paru -S --needed "$@"
+    paru --sudo "$AUR_SUDO" -S --needed "$@"
 }
 
 paru_remove() {
-    paru -Rsc "$@"
+    paru --sudo "$AUR_SUDO" -Rsc "$@"
 }
 
 paru_upgrade() {
-    paru -Su
+    paru --sudo "$AUR_SUDO" -Su
 }
 
 paru_fetch() {
-    paru -Sy
+    paru --sudo "$AUR_SUDO" -Sy
 }
 
 paru_info() {
@@ -400,19 +424,19 @@ paru_format_installed() {
 # =============================================================================
 
 yay_install() {
-    yay -S --needed "$@"
+    yay --sudo "$AUR_SUDO" -S --needed "$@"
 }
 
 yay_remove() {
-    yay -Rsc "$@"
+    yay --sudo "$AUR_SUDO" -Rsc "$@"
 }
 
 yay_upgrade() {
-    yay -Su
+    yay --sudo "$AUR_SUDO" -Su
 }
 
 yay_fetch() {
-    yay -Sy
+    yay --sudo "$AUR_SUDO" -Sy
 }
 
 yay_info() {
@@ -444,19 +468,19 @@ yay_format_installed() {
 # =============================================================================
 
 apt_install() {
-    sudo apt install "$@"
+    with_sudo apt install "$@"
 }
 
 apt_remove() {
-    sudo apt remove "$@"
+    with_sudo apt remove "$@"
 }
 
 apt_upgrade() {
-    sudo apt upgrade
+    with_sudo apt upgrade
 }
 
 apt_fetch() {
-    sudo apt update
+    with_sudo apt update
 }
 
 apt_info() {
@@ -488,20 +512,20 @@ apt_format_installed() {
 # =============================================================================
 
 dnf_install() {
-    sudo dnf install "$@"
+    with_sudo dnf install "$@"
 }
 
 dnf_remove() {
-    sudo dnf remove "$@"
+    with_sudo dnf remove "$@"
 }
 
 dnf_fetch() {
     # dnf exists with code 100 in distrobox https://github.com/fedora-cloud/docker-brew-fedora/issues/46
-    sudo dnf check-update || true
+    with_sudo dnf check-update || true
 }
 
 dnf_upgrade() {
-    sudo dnf upgrade
+    with_sudo dnf upgrade
 }
 
 dnf_info() {
@@ -534,20 +558,20 @@ dnf_format_installed() {
 
 zypper_install() {
     # Confirmation after interactive package selection does not work (user input from stdin is not read)
-    sudo zypper install --no-confirm "$@"
+    with_sudo zypper install --no-confirm "$@"
 }
 
 zypper_remove() {
     # Confirmation after interactive package selection does not work (user input from stdin is not read)
-    sudo zypper remove --no-confirm "$@"
+    with_sudo zypper remove --no-confirm "$@"
 }
 
 zypper_fetch() {
-    sudo zypper refresh
+    with_sudo zypper refresh
 }
 
 zypper_upgrade() {
-    sudo zypper update
+    with_sudo zypper update
 }
 
 zypper_info() {
@@ -576,19 +600,19 @@ zypper_format_installed() {
 # =============================================================================
 
 apk_install() {
-    sudo apk add "$@"
+    with_sudo apk add "$@"
 }
 
 apk_remove() {
-    sudo apk del "$@"
+    with_sudo apk del "$@"
 }
 
 apk_fetch() {
-    sudo apk update
+    with_sudo apk update
 }
 
 apk_upgrade() {
-    sudo apk upgrade
+    with_sudo apk upgrade
 }
 
 apk_info() {
