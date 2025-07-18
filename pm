@@ -202,6 +202,16 @@ compile_stdin_filter() {
 }
 
 interactive_filter() {
+    if [ ! "${COLUMNS-}" ] && is_command tput; then
+        COLUMNS=$(tput cols)
+    fi
+
+    if [ "${COLUMNS:-80}" -lt 80 ]; then
+        PREVIEW_WINDOW='down:50%'
+    else
+        PREVIEW_WINDOW='right:50%'
+    fi
+
     if is_command fzf; then
         fzf --exit-0 \
             --multi \
@@ -210,7 +220,8 @@ interactive_filter() {
             --layout=reverse \
             --exact \
             --cycle \
-            --preview="PM=$PM PM_COLOR=$PM_COLOR $0 info {1}" |
+            --preview="PM=$PM PM_COLOR=$PM_COLOR $0 info {1}" \
+            --preview-window "$PREVIEW_WINDOW" |
             cut -d" " -f1
     else
         die "fzf is not available, run '$0 install fzf' first"
