@@ -34,6 +34,15 @@ Commands:
   h,  help             Print this help.
 ```
 
+## Installation
+
+Asuming `~/.local/bin` directory exists and is configured in the `$PATH`:
+
+```sh
+curl -o ~/.local/bin/pm https://raw.githubusercontent.com/jpikl/pm/refs/heads/master/pm
+chmod +x ~/.local/bin/pm
+```
+
 ## Features
 
 ### STDIN filter
