@@ -43,6 +43,13 @@ curl -o ~/.local/bin/pm https://raw.githubusercontent.com/jpikl/pm/refs/heads/ma
 chmod +x ~/.local/bin/pm
 ```
 
+For Termux users:
+
+```sh
+curl -o /data/data/com.termux/files/usr/bin/pm https://raw.githubusercontent.com/jpikl/pm/refs/heads/master/pm
+chmod +x /data/data/com.termux/files/usr/bin/pm
+```
+
 ## Features
 
 ### STDIN filter
