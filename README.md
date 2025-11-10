@@ -43,7 +43,7 @@ curl -o ~/.local/bin/pm https://raw.githubusercontent.com/jpikl/pm/refs/heads/ma
 chmod +x ~/.local/bin/pm
 ```
 
-For Termux users:
+For [Termux][termux] users:
 
 ```sh
 curl -o /data/data/com.termux/files/usr/bin/pm https://raw.githubusercontent.com/jpikl/pm/refs/heads/master/pm
