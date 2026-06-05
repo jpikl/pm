@@ -43,6 +43,15 @@ curl -o ~/.local/bin/pm https://raw.githubusercontent.com/jpikl/pm/refs/heads/ma
 chmod +x ~/.local/bin/pm
 ```
 
+
+
+If you want to install for all users:
+
+```sh
+sudo curl -o /usr/local/bin/pm https://raw.githubusercontent.com/jpikl/pm/refs/heads/master/pm
+sudo chmod +x /usr/local/bin/pm
+```
+
 For [Termux][termux] users:
 
 ```sh
