@@ -256,7 +256,7 @@ with_sudo() {
 # =============================================================================
 
 # Package managers are detected in this order
-PMS="paru yay pacman apt dnf zypper apk brew scoop"
+PMS="paru yay pacman apt dnf zypper apk nix brew scoop"
 
 pm_detect() {
     if [ ! "${PM-}" ]; then
@@ -741,6 +741,139 @@ scoop_format_all() {
 
 scoop_format_installed() {
     awk "{ print $FMT_NAME \$1 $FMT_GROUP \$2 $FMT_VERSION \$3 $FMT_RESET }"
+}
+
+# =============================================================================
+# Nix
+# =============================================================================
+
+# All flakes from the registry are searched for packages. `nixpkgs` is always
+# searched first and plain package names are assumed to come from it. Channel
+# variants of `nixpkgs` (`nixpkgs/...`) are skipped to avoid listing the same
+# packages repeatedly.
+nix_flakes() {
+    {
+        echo nixpkgs
+        nix registry list 2>/dev/null | awk '
+            /flake:/ {
+                name = $2
+                sub(/^flake:/, "", name)
+                if (name !~ /^nixpkgs\//) print name
+            }
+        '
+    } | awk '!seen[$0]++'
+}
+
+nix_install() {
+    for PKG in "$@"; do
+        case "$PKG" in
+        *#* | *:* | */*) printf '%s\n' "$PKG" ;;
+        *) printf 'nixpkgs#%s\n' "$PKG" ;;
+        esac
+    done | xargs -r nix profile install
+}
+
+nix_remove() {
+    # Strip a possible `flake#` prefix, `nix profile remove` expects plain names.
+    for PKG in "$@"; do
+        printf '%s\n' "${PKG##*#}"
+    done | xargs -r nix profile remove
+}
+
+nix_upgrade() {
+    nix profile upgrade --all
+}
+
+nix_fetch() {
+    # Nix does not maintain a package database, packages are fetched lazily.
+    :
+}
+
+nix_info() {
+    # A package may be referenced as `flake#attribute` or by its plain name.
+    # `nix search` matches against the full attribute path, so searching by the
+    # whole name always finds the package (unlike anchoring to the last
+    # attribute component, which fails for nested attributes). `--quiet`
+    # suppresses the "evaluating ..." progress messages.
+    case "$1" in
+    *#*) nix search --quiet "${1%%#*}" "${1##*#}" ;;
+    *) nix search --quiet nixpkgs "$1" ;;
+    esac
+}
+
+nix_list_all() {
+    # Nix has no package database; packages are evaluated on demand by
+    # `nix search`. We do not maintain our own copy of the results but rely on
+    # nix's evaluation cache (`~/.cache/nix/eval-cache-*`), so the list is
+    # always current and repeated runs are reasonably fast. Flake searches run
+    # in parallel (one worker per flake by default; not CPU-intensive since
+    # they mostly wait on I/O), each capped by `timeout` so a slow flake (e.g.
+    # an uncached first evaluation) can never keep the output stream open
+    # indefinitely. Set `PM_NIX_TIMEOUT=0` to disable the cap.
+    FLAKES=$(nix_flakes)
+    JOBS=${PM_NIX_JOBS:-$(printf '%s\n' "$FLAKES" | wc -l)}
+    printf '%s\n' "$FLAKES" | xargs -r -n 1 -P "$JOBS" sh -c '
+        flake=$1
+        search_flake() {
+            if command -v timeout >/dev/null 2>&1 && [ "${PM_NIX_TIMEOUT:-300}" -gt 0 ] 2>/dev/null; then
+                # `nix search <flake> ^` lists every package in the given flake.
+                timeout -- "${PM_NIX_TIMEOUT:-300}" nix search --quiet "$flake" ^ --json 2>/dev/null
+            else
+                nix search --quiet "$flake" ^ --json 2>/dev/null
+            fi
+        }
+        search_flake |
+        awk -v flake="$flake" '\''{
+            gsub(/\},"/, "}\n\"")
+            n = split($0, lines, "\n")
+            for (i = 1; i <= n; i++) {
+                e = lines[i]
+                name = e
+                sub(/^\{?"/, "", name)
+                sub(/":\{.*/, "", name)
+                sub(/^legacyPackages\.[^.]*\./, "", name)
+                sub(/^packages\.[^.]*\./, "", name)
+                version = e
+                if (sub(/.*"version":"/, "", version)) sub(/".*/, "", version); else version = ""
+                if (name != "") print flake "#" name " " version
+            }
+        }'\''
+    ' _
+}
+
+nix_list_installed() {
+    nix profile list --json 2>/dev/null | awk '
+        {
+            sub(/^\{"elements":\{/, "", $0)
+            sub(/\},"version":[0-9]+\}$/, "", $0)
+            gsub(/\},"/, "}\n\"")
+            n = split($0, lines, "\n")
+            for (i = 1; i <= n; i++) {
+                e = lines[i]
+                name = e
+                sub(/^"?/, "", name)
+                sub(/":\{.*/, "", name)
+                version = ""
+                if (match(e, /\/nix\/store\/[^"]+/)) {
+                    path = substr(e, RSTART, RLENGTH)
+                    sub(/^.*\//, "", path)
+                    sub(/^[^-]*-/, "", path)
+                    prefix = name "-"
+                    if (index(path, prefix) == 1) sub(prefix, "", path)
+                    version = path
+                }
+                if (name != "") print name " " version
+            }
+        }
+    '
+}
+
+nix_format_all() {
+    awk "{ print $FMT_NAME \$1 $FMT_GROUP \$2 $FMT_VERSION \$3 $FMT_RESET }"
+}
+
+nix_format_installed() {
+    awk "{ print $FMT_NAME \$1 $FMT_VERSION \$2 $FMT_RESET }"
 }
 
 # =============================================================================
