@@ -63,7 +63,7 @@ chmod +x /data/data/com.termux/files/usr/bin/pm
 
 ### Interactive search
 
-When running the `install` or `remove` commands without a particular package name, you will be offered an interactive package search via [fzf](https://github.com/junegunn/fzf).
+When running the `install` or `remove` commands without a particular package name, you will be offered an interactive package search via [fzf][fzf].
 
 This requires `fzf` to be installed first (`pm install fzf`).
 
