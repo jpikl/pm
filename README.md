@@ -36,6 +36,8 @@ Commands:
 
 ## Installation
 
+### For the current user
+
 Asuming `~/.local/bin` directory exists and is configured in the `$PATH`:
 
 ```sh
@@ -43,16 +45,14 @@ curl -o ~/.local/bin/pm https://raw.githubusercontent.com/jpikl/pm/refs/heads/ma
 chmod +x ~/.local/bin/pm
 ```
 
-
-
-If you want to install for all users:
+### For all users
 
 ```sh
 sudo curl -o /usr/local/bin/pm https://raw.githubusercontent.com/jpikl/pm/refs/heads/master/pm
 sudo chmod +x /usr/local/bin/pm
 ```
 
-For [Termux][termux] users:
+### For [Termux][termux]
 
 ```sh
 curl -o /data/data/com.termux/files/usr/bin/pm https://raw.githubusercontent.com/jpikl/pm/refs/heads/master/pm
@@ -98,9 +98,9 @@ Options: `paru`, `yay`, `pacman`, `apt`, `dnf`, `zypper`, `apk`, `brew`, `scoop`
 The default package manager is auto detected by checking availability of the binaries listed above (in that particular order).
 
 ```shell
-pm install fzf           # Auto detect package manager
-PM=pacman pm install fzf # Use pacman
-PM=yay pm install fzf    # Use yay
+pm install "<package>"           # Auto detect package manager
+PM=pacman pm install "<package>" # Use pacman
+PM=yay pm install "<package>"    # Use yay
 ```
 
 ### PM_SUDO
@@ -108,9 +108,9 @@ PM=yay pm install fzf    # Use yay
 Controls which program is used to run operations as root.
 
 ```shell
-PM_SUDO=sudo-rs pm install fzf # Use alternative sudo command
-PM_SUDO=doas pm install fzf    # Use alternative sudo command
-PM_SUDO= pm install fzf        # Disable execution as root
+PM_SUDO=sudo-rs pm install "<package>" # Use alternative sudo command
+PM_SUDO=doas pm install "<package>"    # Use alternative sudo command
+PM_SUDO= pm install "<package>"        # Disable execution as root
 ```
 
 The default value is `sudo`. In case the `sudo` binary is not available, `pm` checks for alternatives like `sudo-rs` or `doas`.
