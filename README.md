@@ -61,21 +61,11 @@ chmod +x /data/data/com.termux/files/usr/bin/pm
 
 ## Features
 
-### STDIN filter
+### Interactive search
 
-Interactive commands can read additional filters from standard input.
+When running the `install` or `remove` commands without a particular package name, you will be offered an interactive package search via [fzf](https://github.com/junegunn/fzf).
 
-- Each line is a regular expression (POSIX extended), matching whole package name.
-- Hash sign `#` indicates the start of a comment (which is ignored).
-
-```sh
-echo "bat" >> favorite_pkgs.txt
-echo "fzf" >> favorite_pkgs.txt
-echo "ripgrep" >> favorite_pkgs.txt
-
-# Interactively select favorite packages to install
-pm install < favorite_pkgs.txt
-```
+This requires `fzf` to be installed first (`pm install fzf`).
 
 ### AUR helpers
 
