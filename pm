@@ -23,7 +23,7 @@ usage() {
 	echo "  li, list installed   List installed packages."
 	echo "  sa  search all       Interactively search between all packages."
 	echo "  si  search installed Interactively search between installed packages."
-	echo "  w,  which            Print which package manager is being used."
+	echo "  w,  which            Print which package manager pm uses."
 	echo "  h,  help             Print this help."
 }
 

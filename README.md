@@ -1,17 +1,17 @@
 # pm
 
-Wrapper around various package managers with unified CLI.
+`pm` is a wrapper for package managers. It gives you one command-line interface for all of them.
 
-- Supports: [pacman][pacman], [paru][paru], [yay][yay], [apt][apt], [dnf][dnf], [zypper][zypper], [apk][apk], [brew][brew], [scoop][scoop].
-- Interactive package selection using [fzf][fzf] with package info preview.
-- A single self-contained script. Just copy it somewhere on the `$PATH` and you're good to go.
-- POSIX compliant (will run literally everywhere, including [Termux][termux]).
+- Supports [pacman][pacman], [paru][paru], [yay][yay], [apt][apt], [dnf][dnf], [zypper][zypper], [apk][apk], [brew][brew], and [scoop][scoop].
+- Selects packages interactively with [fzf][fzf] and shows a package information preview.
+- Is a single script. Copy it to a directory in your `$PATH`.
+- Follows the POSIX standard. It runs on most systems, including [Termux][termux].
 
 ![Demo usage](demo.gif)
 
 ## Usage
 
-Run `pm help` for the usage:
+Run `pm help` to print the usage:
 
 ```
 Package manager wrapper (supports: paru yay pacman apt dnf zypper apk brew scoop)
@@ -30,7 +30,7 @@ Commands:
   li, list installed   List installed packages.
   sa  search all       Interactively search between all packages.
   si  search installed Interactively search between installed packages.
-  w,  which            Print which package manager is being used.
+  w,  which            Print which package manager pm uses.
   h,  help             Print this help.
 ```
 
@@ -38,7 +38,7 @@ Commands:
 
 ### For the current user
 
-Asuming `~/.local/bin` directory exists and is configured in the `$PATH`:
+If the `~/.local/bin` directory exists and is in your `$PATH`, run the following commands:
 
 ```sh
 curl -o ~/.local/bin/pm https://raw.githubusercontent.com/jpikl/pm/refs/heads/master/pm
@@ -63,29 +63,29 @@ chmod +x /data/data/com.termux/files/usr/bin/pm
 
 ### Interactive search
 
-When running the `install` or `remove` commands without a particular package name, you will be offered an interactive package search via [fzf][fzf].
+If you run the `install` or `remove` command without a package name, `pm` starts an interactive package search with a package information preview.
 
-This requires `fzf` to be installed first (`pm install fzf`).
+This feature needs [fzf][fzf]. Install it first: `pm install fzf`.
 
 ### AUR helpers
 
-On Arch Linux, `pm` allows easy installation of selected AUR helpers.
+On Arch Linux, `pm` can install AUR helpers.
 
-Just run `pm install <aur-helper>` where `<aur-helper>` is one of `paru`, `yay` or their binary variant (`paru-bin`, `yay-bin`).
+Run `pm install <helper>`. `<helper>` is `paru`, `yay`, or their binary variant (`paru-bin`, `yay-bin`).
 
-These AUR helpers will be then used as the prefered package manager over `pacman`.
+`pm` then uses this AUR helper instead of `pacman`.
 
 ## Configuration
 
-Configuration is done through the following environment variables
+You configure `pm` with the following environment variables.
 
 ### PM
 
-Enforces use of a specific package manager.
+Forces `pm` to use a specific package manager.
 
 Options: `paru`, `yay`, `pacman`, `apt`, `dnf`, `zypper`, `apk`, `brew`, `scoop`.
 
-The default package manager is auto detected by checking availability of the binaries listed above (in that particular order).
+By default, `pm` detects the package manager automatically. It checks for the binaries in the order listed above.
 
 ```shell
 pm install "<package>"           # Auto detect package manager
@@ -95,7 +95,7 @@ PM=yay pm install "<package>"    # Use yay
 
 ### PM_SUDO
 
-Controls which program is used to run operations as root.
+Sets the program that runs operations as root.
 
 ```shell
 PM_SUDO=sudo-rs pm install "<package>" # Use alternative sudo command
@@ -103,36 +103,36 @@ PM_SUDO=doas pm install "<package>"    # Use alternative sudo command
 PM_SUDO= pm install "<package>"        # Disable execution as root
 ```
 
-The default value is `sudo`. In case the `sudo` binary is not available, `pm` checks for alternatives like `sudo-rs` or `doas`.
+The default value is `sudo`. If the `sudo` binary is not available, `pm` checks for alternatives (`sudo-rs`, `doas`).
 
-When running inside [Termux][termux], the execution as root is disabled by default (unless `PM_SUDO` is explicitly set).
+Inside [Termux][termux], `pm` disables execution as root by default. Set `PM_SUDO` to change this.
 
 ### PM_COLOR
 
-Controls color output for non-interactive commands.
+Sets color output for non-interactive commands.
 
 Options: `auto`, `always`, `never`.
 
-The default value is `auto` which outputs colors only when STDOUT is a TTY.
+The default value is `auto`. It outputs colors only when STDOUT is a TTY.
 
 ## FAQ
 
 ### How to select multiple packages in interactive mode?
 
-Use the `TAB` key to (un)select multiple packages.
+Press `TAB` to select or deselect multiple packages.
 
 See [fzf docs](https://github.com/junegunn/fzf#using-the-finder) for more keyboard shortcuts.
 
 ### Is this better than my package manager?
 
-Probably not, but it could be more convenient in some cases:
+Probably not. It can be more convenient in some cases:
 
-1. If you often switch between distros and you do not want to remember every package manager CLI.
-2. Interactive package selection really helps when you are searching for a package to install and you do not know the exact name.
+1. If you switch between distros often, `pm` saves you from learning each package manager's command-line interface.
+2. Interactive package selection helps when you search for a package and you do not know its exact name.
 
 ### Can you support package manager XYZ?
 
-Just create [an issue](https://github.com/jpikl/pm/issues) for the support and I will look into that.
+Create [an issue](https://github.com/jpikl/pm/issues) for the request. I will look into it.
 
 ## License
 
